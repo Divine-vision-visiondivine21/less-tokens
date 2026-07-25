@@ -39,7 +39,7 @@
 - **Bilingual UI:** Native support for English and Spanish.
 
 ### 🛠️ Usage
-1. Open the `index.html` file in your browser or visit `[less-tokens.rfj.app]`.
+1. Open the `index.html` file in your browser or visit [https://less-tokens.rfj.app](https://less-tokens.rfj.app).
 2. Select your data type (Text, Code, or JSON).
 3. Paste your content into the text area.
 4. Click **Compress Context for Free**. (The first time, it will download a ~100MB local AI model to your browser cache).
@@ -63,7 +63,7 @@ El **Reductor de Tokens Inteligente** es una herramienta web desarrollada por [R
 - **Interfaz Bilingüe:** Soporte nativo para Inglés y Español.
 
 ### 🛠️ Uso
-1. Abre el archivo `index.html` en tu navegador o visita `[less-tokens.rfj.app]`.
+1. Abre el archivo `index.html` en tu navegador o visita [https://less-tokens.rfj.app](https://less-tokens.rfj.app).
 2. Selecciona el tipo de datos (Texto, Código o JSON).
 3. Pega tu contenido en el área de texto.
 4. Haz clic en **Comprimir Contexto Gratis**. (La primera vez, descargará un modelo de IA local de ~100MB a la caché de tu navegador).
