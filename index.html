@@ -396,9 +396,25 @@
             let output = input;
 
             if (modoActual === 'codigo') {
-                output = output.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+                // Expresión regular que coincide con:
+                // 1. Cadenas de texto ("...", '...', `...`)
+                // 2. Comentarios de bloque (/* ... */)
+                // 3. Comentarios de línea (// ...)
+                const regexCodigo = /(["'`])(?:(?=(\\?))\2.)*?\1|\/\*[\s\S]*?\*\/|\/\/.*$/gm;
+                
+                output = output.replace(regexCodigo, function(match, grupoCadena) {
+                    // Si 'grupoCadena' existe, significa que el match es un string de código.
+                    // Lo devolvemos intacto para no romper URLs ni textos.
+                    if (grupoCadena) {
+                        return match;
+                    }
+                    // Si no, es un comentario. Lo reemplazamos por nada (lo eliminamos).
+                    return '';
+                });
+
+                // Finalmente, colapsamos todos los espacios, tabulaciones y saltos de línea a un solo espacio
                 output = output.replace(/\s+/g, ' ');
-            } 
+            }
             else if (modoActual === 'json') {
                 try {
                     const jsonObjeto = JSON.parse(input);
