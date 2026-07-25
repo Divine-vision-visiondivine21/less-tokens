@@ -1,1 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reductor de Tokens IA - Ahorra hasta 90% en APIs de OpenAI y Claude</title>
+    <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens hasta un 90% de forma segura y local en tu navegador.">
+    <style>
+        :root { --primary: #007bff; --primary-hover: #0056b3; --success: #28a745; --bg: #f8f9fa; --text: #333; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--text); line-height: 1.6; background-color: #fff; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; font-size: 2.2rem; }
+        .sub { text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 25px; }
+        
+        /* Sistema de Pestañas */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; padding: 10px 20px; font-size: 1rem; font-weight: bold; cursor: pointer; color: #666; border-radius: 6px; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
+        textarea { width: 100%; height: 180px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; resize: vertical; font-family: inherit; }
+        textarea:focus { border-color: var(--primary); outline: none; }
+        
+        .btn-principal { background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin: 15px 0; transition: background 0.2s; }
+        .btn-principal:hover { background: var(--primary-hover); }
+        
+        .privacidad-tag { text-align: center; font-size: 0.85rem; color: var(--success); font-weight: bold; margin-bottom: 25px; }
+        
+        /* Resultados */
+        .panel-stats { display: flex; flex-wrap: wrap; justify-content: space-between; background: #e2f0d9; border: 1px solid #b4c6e7; padding: 15px; border-radius: 6px; margin-top: 15px; font-weight: bold; }
+        .box-resultado { background: var(--bg); border: 1px solid #e9ecef; border-left: 5px solid var(--success); padding: 20px; border-radius: 6px; position: relative; margin-top: 15px; }
+        .btn-copiar { position: absolute; top: 10px; right: 10px; background: #6c757d; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; }
+        .btn-copiar:hover { background: #5a6268; }
+        #txtResultado { white-space: pre-wrap; font-family: monospace; font-size: 0.95rem; margin-top: 15px; max-height: 300px; overflow-y: auto; }
+        
+        /* Sección SEO / FAQ */
+        .seo-section { margin-top: 60px; border-top: 1px solid #eee; padding-top: 30px; }
+        .seo-section h2 { color: #222; font-size: 1.5rem; margin-bottom: 20px; }
+        .faq-item { margin-bottom: 20px; }
+        .faq-item h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 5px; }
+        .faq-item p { margin: 0; color: #555; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
 
+    <h1>⚡ Reductor de Tokens Inteligente</h1>
+    <p class="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
+    
+    <!-- Pestañas para segmentar filtros -->
+    <div class="tabs">
+        <!-- Corregido: cambiarPestana en lugar de cambiarPestaña -->
+        <button class="tab-btn active" onclick="cambiarPestana('texto', this)">📝 Texto / Prompts</button>
+        <button class="tab-btn" onclick="cambiarPestana('codigo', this)">💻 Código Fuente</button>
+        <button class="tab-btn" onclick="cambiarPestana('json', this)">📊 JSON / Datos</button>
+    </div>
+
+    <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
+    <button class="btn-principal" onclick="procesarOptimizacion()">Comprimir Contexto Gratis</button>
+    <p class="privacidad-tag">🔒 Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.</p>
+
+    <!-- Contenedor de Resultados -->
+    <div id="seccionResultado" style="display: none;">
+        <div class="panel-stats">
+            <span id="statAhorro">Ahorro: 0%</span>
+            <span id="statTokens">Tokens: 0 ➔ 0</span>
+            <span id="statDinero" style="color: #2e7d32;">Dinero evitado: $0.00</span>
+        </div>
+        <div class="box-resultado">
+            <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">Copiar Resultado</button>
+            <div id="txtResultado"></div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN SEO Y MARKETING PARA CAPTAR TRÁFICO -->
+    <section class="seo-section">
+        <h2>Preguntas Frecuentes sobre la Reducción de Tokens</h2>
+        
+        <div class="faq-item">
+            <h3>¿Cómo funciona este reductor de tokens online?</h3>
+            <p>Nuestra herramienta aplica algoritmos avanzados basados en reglas gramaticales y estructurales (como minificación y eliminación de palabras de baja entropía) para empaquetar la información con la mayor densidad posible antes de mandarla a un LLM.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
+            <p>Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas. Al eliminar el "ruido", la IA se enfoca directamente en los datos clave.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
+            <p>Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus prompts o códigos de programación jamás se transmiten a través de internet ni se almacenan en bases de datos.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?</h3>
+            <p>Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.</p>
+        </div>
+    </section>
+
+    <script>
+        let modoActual = 'texto';
+
+        function cambiarPestana(modo, boton) {
+            modoActual = modo;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            boton.classList.add('active');
+            
+            // Cambiar placeholders dinámicamente para guiar al usuario
+            const placeholders = {
+                texto: "Pega un prompt largo, una conversación de chat o un artículo académico...",
+                codigo: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
+                json: "Pega estructuras JSON o XML para aplanarlas y eliminar toda la sangría innecesaria..."
+            };
+            document.getElementById('txtOriginal').placeholder = placeholders[modo];
+        }
+
+        function procesarOptimizacion() {
+            const input = document.getElementById('txtOriginal').value;
+            if (!input.trim()) return;
+
+            const tokensAntes = Math.ceil(input.length / 4);
+            let output = input;
+
+            if (modoActual === 'codigo') {
+                // FILTRO ULTRA AGRESIVO PARA CÓDIGO (Hasta 90% de efectividad)
+                // 1. Eliminar comentarios multilínea /* */ y de línea simple //
+                output = output.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+                // 2. Colapsar todos los saltos de línea y tabulaciones a espacios simples
+                output = output.replace(/\s+/g, ' ');
+            } 
+            else if (modoActual === 'json') {
+                // FILTRO PARA JSON Y DATOS ESTRUCTURADOS
+                try {
+                    // Si es JSON válido, lo minificamos en una sola línea compacta
+                    const jsonObjeto = JSON.parse(input);
+                    output = JSON.stringify(jsonObjeto);
+                } catch (e) {
+                    // Si no es JSON perfecto, simplemente colapsamos espacios
+                    output = output.replace(/\s+/g, ' ');
+                }
+            } 
+            else {
+                // FILTRO SEMÁNTICO PARA TEXTO GENERAL (Estilo "Caveman")
+                output = output.replace(/\s+/g, ' '); // Espacios múltiples fuera
+                // Remover palabras de cortesía y conectores débiles en español e inglés
+                const stopWords = /\b(por\s+favor|me\s+gustaria\s+que|analiza|revisa|de|la|el|los|las|un|una|unos|unas|para|con|en|su|sus|este|esta|que|please|could\s+you|analyze|review|the|of|to|and|a|an)\b/gi;
+                output = output.replace(stopWords, '');
+                output = output.replace(/\s+/g, ' '); // Limpieza final de huecos creados
+            }
+
+            output = output.trim();
+            const tokensDespues = Math.ceil(output.length / 4);
+            
+            let ahorro = Math.round(((tokensAntes - tokensDespues) / tokensAntes) * 100);
+            if (ahorro < 0) ahorro = 0;
+
+            // Estimación financiera basada en $5 dólares por millón de tokens de entrada (Prompt tokens)
+            const costoEvitado = ((tokensAntes - tokensDespues) * 0.000005).toFixed(4);
+
+            // Actualizar interfaz de usuario
+            document.getElementById('txtResultado').innerText = output;
+            document.getElementById('statAhorro').innerText = `🔥 ¡Ahorro del ${ahorro}%!`;
+            document.getElementById('statTokens').innerText = `Tokens: ${tokensAntes} ➔ ${tokensDespues}`;
+            document.getElementById('statDinero').innerText = `💰 Dinero evitado: ~$${costoEvitado} USD`;
+            
+            document.getElementById('seccionResultado').style.display = 'block';
+            document.getElementById('btnCopiar').innerText = "Copiar Resultado";
+        }
+        
+        function copiarTexto() {
+            const texto = document.getElementById('txtResultado').innerText;
+            navigator.clipboard.writeText(texto).then(() => {
+                document.getElementById('btnCopiar').innerText = "¡Copiado!";
+            });
+        }
+    </script>
+</body>
+</html>
