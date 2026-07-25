@@ -10,6 +10,9 @@
             --primary: #001f5b; /* Azul Marino */
             --primary-hover: #00143a; /* Azul Marino más oscuro */
             --success: #28a745; 
+            --warning-bg: #fff3cd;
+            --warning-text: #856404;
+            --warning-border: #ffeeba;
             --bg: #f8f9fa; 
             --text: #333; 
         }
@@ -30,6 +33,9 @@
         
         textarea { width: 100%; height: 180px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; resize: vertical; font-family: inherit; }
         textarea:focus { border-color: var(--primary); outline: none; }
+        
+        /* Alerta de Calidad de Prompt */
+        .alerta-calidad { display: none; align-items: center; gap: 10px; background-color: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); padding: 12px 15px; border-radius: 6px; margin: 10px 0; font-size: 0.95rem; line-height: 1.4; }
         
         /* Botón Principal */
         .btn-principal { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin: 15px 0; transition: background 0.2s; }
@@ -61,7 +67,6 @@
     
     <!-- LOGO RFJ SOFTWARE -->
     <div class="logo-container">
-        <!-- Reemplaza el href con la URL real de tu web -->
         <a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer" title="Visitar el sitio web de RFJ Software">
             <img src="logo-rfj.png" alt="Logo RFJ Software">
         </a>
@@ -70,7 +75,7 @@
     <h1>Reductor de Tokens Inteligente</h1>
     <p class="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
     
-    <!-- Pestañas para segmentar filtros (Con SVGs inline) -->
+    <!-- Pestañas para segmentar filtros -->
     <div class="tabs">
         <button class="tab-btn active" onclick="cambiarPestana('texto', this)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -88,6 +93,9 @@
 
     <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
     
+    <!-- Contenedor para mostrar alertas de validación de prompts -->
+    <div id="alertaCalidad" class="alerta-calidad"></div>
+
     <button class="btn-principal" onclick="procesarOptimizacion()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
         Comprimir Contexto Gratis
@@ -114,25 +122,21 @@
         </div>
     </div>
 
-    <!-- SECCIÓN SEO Y MARKETING PARA CAPTAR TRÁFICO -->
+    <!-- SECCIÓN SEO Y MARKETING -->
     <section class="seo-section">
         <h2>Preguntas Frecuentes sobre la Reducción de Tokens</h2>
-        
         <div class="faq-item">
             <h3>¿Cómo funciona este reductor de tokens online?</h3>
             <p>Nuestra herramienta aplica algoritmos avanzados basados en reglas gramaticales y estructurales (como minificación y eliminación de palabras de baja entropía) para empaquetar la información con la mayor densidad posible antes de mandarla a un LLM.</p>
         </div>
-
         <div class="faq-item">
             <h3>¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
             <p>Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas. Al eliminar el "ruido", la IA se enfoca directamente en los datos clave.</p>
         </div>
-
         <div class="faq-item">
             <h3>¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
             <p>Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus prompts o códigos de programación jamás se transmiten a través de internet ni se almacenan en bases de datos.</p>
         </div>
-
         <div class="faq-item">
             <h3>¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?</h3>
             <p>Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.</p>
@@ -152,7 +156,9 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             boton.classList.add('active');
             
-            // Cambiar placeholders dinámicamente para guiar al usuario
+            // Ocultar alerta de calidad al cambiar de pestaña
+            document.getElementById('alertaCalidad').style.display = 'none';
+            
             const placeholders = {
                 texto: "Pega un prompt largo, una conversación de chat o un artículo académico...",
                 codigo: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
@@ -163,18 +169,38 @@
 
         function procesarOptimizacion() {
             const input = document.getElementById('txtOriginal').value;
+            const alerta = document.getElementById('alertaCalidad');
+            
+            // Ocultar alerta al iniciar nuevo proceso
+            alerta.style.display = 'none';
+            
             if (!input.trim()) return;
+
+            // --- NUEVO: VALIDADOR DE CALIDAD DE PROMPTS ---
+            if (modoActual === 'texto') {
+                const numPalabras = input.trim().split(/\s+/).length;
+                if (numPalabras < 10) {
+                    alerta.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <div>
+                            <strong>Prompt demasiado general (${numPalabras} palabras):</strong><br> 
+                            Para obtener mejores resultados, define un <strong>rol</strong>, el <strong>contexto</strong> y el <strong>formato</strong> que deseas. Agrega más detalles antes de comprimir.
+                        </div>
+                    `;
+                    alerta.style.display = 'flex';
+                    return; // Detiene la ejecución para que el usuario mejore el texto
+                }
+            }
+            // ----------------------------------------------
 
             const tokensAntes = Math.ceil(input.length / 4);
             let output = input;
 
             if (modoActual === 'codigo') {
-                // FILTRO ULTRA AGRESIVO PARA CÓDIGO
                 output = output.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
                 output = output.replace(/\s+/g, ' ');
             } 
             else if (modoActual === 'json') {
-                // FILTRO PARA JSON Y DATOS ESTRUCTURADOS
                 try {
                     const jsonObjeto = JSON.parse(input);
                     output = JSON.stringify(jsonObjeto);
@@ -183,7 +209,6 @@
                 }
             } 
             else {
-                // FILTRO SEMÁNTICO PARA TEXTO GENERAL
                 output = output.replace(/\s+/g, ' '); 
                 const stopWords = /\b(por\s+favor|me\s+gustaria\s+que|analiza|revisa|de|la|el|los|las|un|una|unos|unas|para|con|en|su|sus|este|esta|que|please|could\s+you|analyze|review|the|of|to|and|a|an)\b/gi;
                 output = output.replace(stopWords, '');
@@ -205,7 +230,6 @@
             
             document.getElementById('seccionResultado').style.display = 'block';
             
-            // Restablecer el contenido original del botón de copiar con su ícono
             document.getElementById('btnCopiar').innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Copiar Resultado
@@ -215,7 +239,6 @@
         function copiarTexto() {
             const texto = document.getElementById('txtResultado').innerText;
             navigator.clipboard.writeText(texto).then(() => {
-                // Actualizar el botón con un ícono de check
                 document.getElementById('btnCopiar').innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     ¡Copiado!
