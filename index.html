@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reductor de Tokens IA - RFJ Software</title>
+    <title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
     <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens hasta un 90% de forma segura y local en tu navegador.">
     
     <!-- Script de Cloudflare Turnstile -->
@@ -23,9 +23,15 @@
             --bg: #f8f9fa; 
             --text: #333; 
         }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--text); line-height: 1.6; background-color: #fff; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--text); line-height: 1.6; background-color: #fff; position: relative; }
         
-        .logo-container { text-align: center; margin-bottom: 25px; }
+        /* Selector de Idioma */
+        .lang-switch { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; }
+        .lang-btn { background: none; border: 1px solid #ccc; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #555; transition: 0.2s; }
+        .lang-btn:hover { background: #f0f0f0; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .logo-container { text-align: center; margin-bottom: 25px; margin-top: 30px; }
         .logo-container img { max-width: 120px; height: auto; transition: transform 0.2s ease; }
         .logo-container img:hover { transform: scale(1.02); }
         
@@ -43,7 +49,6 @@
         .alerta-advertencia { background-color: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
         .alerta-error { background-color: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
         
-        /* Contenedor para centrar Turnstile */
         .turnstile-container { display: flex; justify-content: center; margin: 15px 0; }
 
         .btn-principal { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin: 15px 0; transition: background 0.2s; }
@@ -67,31 +72,41 @@
         .footer-branding { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 0.95rem; color: #666; }
         .footer-branding a { color: var(--primary); text-decoration: none; font-weight: bold; transition: color 0.2s; }
         .footer-branding a:hover { color: var(--primary-hover); text-decoration: underline; }
+        
+        @media (max-width: 600px) {
+            .lang-switch { position: static; justify-content: center; margin-bottom: 20px; }
+            .logo-container { margin-top: 0; }
+        }
     </style>
 </head>
 <body>
     
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="cambiarIdioma('es')" id="btn-es">ES</button>
+        <button class="lang-btn" onclick="cambiarIdioma('en')" id="btn-en">EN</button>
+    </div>
+
     <div class="logo-container">
         <a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer" title="Visitar el sitio web de RFJ Software">
             <img src="logo-rfj.png" alt="Logo RFJ Software">
         </a>
     </div>
 
-    <h1>Reductor de Tokens Inteligente</h1>
-    <p class="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
+    <h1 data-i18n="h1">Reductor de Tokens Inteligente</h1>
+    <p class="sub" data-i18n="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
     
     <div class="tabs">
         <button class="tab-btn active" onclick="cambiarPestana('texto', this)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Texto / Prompts
+            <span data-i18n="tabText">Texto / Prompts</span>
         </button>
         <button class="tab-btn" onclick="cambiarPestana('codigo', this)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            Código Fuente
+            <span data-i18n="tabCode">Código Fuente</span>
         </button>
         <button class="tab-btn" onclick="cambiarPestana('json', this)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-            JSON / Datos
+            <span data-i18n="tabJson">JSON / Datos</span>
         </button>
     </div>
 
@@ -99,20 +114,18 @@
     
     <div id="alertaCalidad" class="alerta-calidad"></div>
 
-    <!-- Integración del Widget de Cloudflare Turnstile -->
     <div class="turnstile-container">
         <div class="cf-turnstile" data-sitekey="0x4AAAAAAD9pktc-8Oh0WcOK" data-callback="turnstileCompletado" data-theme="light"></div>
     </div>
 
-    <!-- El botón inicia bloqueado (disabled) -->
     <button id="btnPrincipal" class="btn-principal" onclick="procesarOptimizacion()" disabled>
         <svg id="iconoBtn" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span id="textoBtn">Comprimir Contexto Gratis</span>
+        <span id="textoBtn" data-i18n="btnCompress">Comprimir Contexto Gratis</span>
     </button>
     
     <p class="privacidad-tag">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.
+        <span data-i18n="privacyTag">Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.</span>
     </p>
 
     <!-- Contenedor de Resultados -->
@@ -125,45 +138,148 @@
         <div class="box-resultado">
             <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                Copiar Resultado
+                <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
             </button>
             <div id="txtResultado"></div>
         </div>
     </div>
 
     <section class="seo-section">
-        <h2>Preguntas Frecuentes sobre la Reducción de Tokens</h2>
+        <h2 data-i18n="faqTitle">Preguntas Frecuentes sobre la Reducción de Tokens</h2>
         <div class="faq-item">
-            <h3>¿Cómo funciona este reductor de tokens online?</h3>
-            <p>Nuestra herramienta aplica algoritmos avanzados basados en reglas gramaticales y estructurales (como minificación y eliminación de palabras de baja entropía) para empaquetar la información con la mayor densidad posible antes de mandarla a un LLM.</p>
+            <h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3>
+            <p data-i18n="faq1A">Nuestra herramienta aplica algoritmos avanzados basados en reglas gramaticales y estructurales para empaquetar la información con la mayor densidad posible antes de mandarla a un LLM.</p>
         </div>
         <div class="faq-item">
-            <h3>¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
-            <p>Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas. Al eliminar el "ruido", la IA se enfoca directamente en los datos clave.</p>
+            <h3 data-i18n="faq2Q">¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
+            <p data-i18n="faq2A">Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas.</p>
         </div>
         <div class="faq-item">
-            <h3>¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
-            <p>Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus prompts o códigos de programación jamás se transmiten a través de internet ni se almacenan en bases de datos.</p>
+            <h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
+            <p data-i18n="faq3A">Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus datos jamás se transmiten a través de internet.</p>
         </div>
         <div class="faq-item">
-            <h3>¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?</h3>
-            <p>Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.</p>
+            <h3 data-i18n="faq4Q">¿Cuánto dinero puedo ahorrar en la API?</h3>
+            <p data-i18n="faq4A">Dependiendo del formato, puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos mensuales.</p>
         </div>
     </section>
 
     <footer class="footer-branding">
-        Una herramienta desarrollada por <a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a>
+        <span data-i18n="footerPrefix">Una herramienta desarrollada por </span><a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a>
     </footer>
 
     <script>
+        // --- DICCIONARIO DE TRADUCCIONES ---
+        const translations = {
+            es: {
+                pageTitle: "Reductor de Tokens IA - RFJ Software",
+                h1: "Reductor de Tokens Inteligente",
+                sub: "Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.",
+                tabText: "Texto / Prompts",
+                tabCode: "Código Fuente",
+                tabJson: "JSON / Datos",
+                placeholderText: "Pega un prompt largo, una conversación de chat o un artículo académico...",
+                placeholderCode: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
+                placeholderJson: "Pega estructuras JSON o XML para aplanarlas y eliminar toda la sangría innecesaria...",
+                btnCompress: "Comprimir Contexto Gratis",
+                btnDownloading: "Descargando IA local",
+                btnAnalyzing: "Analizando semántica...",
+                privacyTag: "Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.",
+                btnCopy: "Copiar Resultado",
+                btnCopied: "¡Copiado!",
+                faqTitle: "Preguntas Frecuentes sobre la Reducción de Tokens",
+                faq1Q: "¿Cómo funciona este reductor de tokens online?",
+                faq1A: "Nuestra herramienta aplica algoritmos avanzados basados en reglas gramaticales y estructurales (como minificación y eliminación de palabras de baja entropía) para empaquetar la información con la mayor densidad posible antes de mandarla a un LLM.",
+                faq2Q: "¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?",
+                faq2A: "Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas. Al eliminar el 'ruido', la IA se enfoca directamente en los datos clave.",
+                faq3Q: "¿Es seguro pegar código confidencial o datos de mi empresa aquí?",
+                faq3A: "Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus prompts o códigos de programación jamás se transmiten a través de internet ni se almacenan en bases de datos.",
+                faq4Q: "¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?",
+                faq4A: "Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.",
+                footerPrefix: "Una herramienta desarrollada por ",
+                alertShortTitle: "Prompt demasiado corto",
+                alertShortDesc: "Para obtener mejores resultados, define un <strong>rol</strong>, el <strong>contexto</strong> y el <strong>formato</strong> que deseas antes de comprimir.",
+                alertIrrTitle: "Contexto no detectado",
+                alertIrrDesc: "La Inteligencia Artificial analizó tu texto y determinó que carece de coherencia técnica o de negocios. Por favor, sé más específico.",
+                statSavePrefix: "¡Ahorro del ",
+                moneySavedPrefix: "Dinero evitado: ~$"
+            },
+            en: {
+                pageTitle: "AI Token Reducer - RFJ Software",
+                h1: "Smart Token Reducer",
+                sub: "Optimize your requests for ChatGPT, Claude, and Gemini without losing context.",
+                tabText: "Text / Prompts",
+                tabCode: "Source Code",
+                tabJson: "JSON / Data",
+                placeholderText: "Paste a long prompt, a chat conversation, or an academic article...",
+                placeholderCode: "Paste your Java, JavaScript, Python files, etc. Comments and spaces will be removed...",
+                placeholderJson: "Paste JSON or XML structures to flatten them and remove all unnecessary indentation...",
+                btnCompress: "Compress Context for Free",
+                btnDownloading: "Downloading local AI",
+                btnAnalyzing: "Analyzing semantics...",
+                privacyTag: "Local Processing: Your data is cleaned in your browser and never touches any external server.",
+                btnCopy: "Copy Result",
+                btnCopied: "Copied!",
+                faqTitle: "Frequently Asked Questions about Token Reduction",
+                faq1Q: "How does this online token reducer work?",
+                faq1A: "Our tool applies advanced algorithms based on grammatical and structural rules (like minification and removal of low-entropy words) to pack the information with the highest possible density before sending it to an LLM.",
+                faq2Q: "Will Artificial Intelligence still understand my compressed message?",
+                faq2A: "Yes. Advanced models like GPT-4o or Claude 3.5 do not require perfect human grammar or polite connectors to understand complex instructions. By eliminating 'noise', the AI focuses directly on key data.",
+                faq3Q: "Is it safe to paste confidential code or company data here?",
+                faq3A: "It is 100% safe. All logic runs on the client side using pure JavaScript in your browser. Your prompts or programming codes are never transmitted over the internet or stored in databases.",
+                faq4Q: "How much money can I save on the OpenAI or Anthropic API?",
+                faq4A: "Depending on the format (especially in source code), you can see reductions of up to 90% in the input token count, drastically decreasing your monthly development costs.",
+                footerPrefix: "A tool developed by ",
+                alertShortTitle: "Prompt too short",
+                alertShortDesc: "For better results, define a <strong>role</strong>, the <strong>context</strong>, and the <strong>format</strong> you want before compressing.",
+                alertIrrTitle: "Context not detected",
+                alertIrrDesc: "The Artificial Intelligence analyzed your text and determined that it lacks technical or business coherence. Please be more specific.",
+                statSavePrefix: "Savings: ",
+                moneySavedPrefix: "Money saved: ~$"
+            }
+        };
+
+        // --- LÓGICA PRINCIPAL ---
         let modoActual = 'texto';
         let clasificadorIA = null;
         let tokenDeValidacion = ""; 
+        let idiomaActual = 'es';
 
-        // Función que llama Turnstile cuando valida que es humano
+        function cambiarIdioma(lang) {
+            idiomaActual = lang;
+            document.documentElement.lang = lang;
+            
+            // Botones del selector
+            document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            
+            // Title document
+            document.title = translations[lang].pageTitle;
+
+            // Textos estáticos con atributo data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+
+            // Actualizar placeholder activo
+            const placeholders = {
+                texto: translations[lang].placeholderText,
+                codigo: translations[lang].placeholderCode,
+                json: translations[lang].placeholderJson
+            };
+            document.getElementById('txtOriginal').placeholder = placeholders[modoActual];
+
+            // Restaurar botón principal si no está procesando
+            if (!document.getElementById('btnPrincipal').disabled || document.getElementById('textoBtn').innerText.includes('%')) {
+               document.getElementById('textoBtn').innerText = translations[lang].btnCompress;
+            }
+        }
+
         function turnstileCompletado(token) {
             tokenDeValidacion = token;
-            // Desbloqueamos el botón
             document.getElementById('btnPrincipal').disabled = false;
         }
 
@@ -175,9 +291,9 @@
             document.getElementById('alertaCalidad').style.display = 'none';
             
             const placeholders = {
-                texto: "Pega un prompt largo, una conversación de chat o un artículo académico...",
-                codigo: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
-                json: "Pega estructuras JSON o XML para aplanarlas y eliminar toda la sangría innecesaria..."
+                texto: translations[idiomaActual].placeholderText,
+                codigo: translations[idiomaActual].placeholderCode,
+                json: translations[idiomaActual].placeholderJson
             };
             document.getElementById('txtOriginal').placeholder = placeholders[modo];
         }
@@ -186,7 +302,21 @@
             if (!clasificadorIA) {
                 const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
                 env.allowLocalModels = false;
-                clasificadorIA = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+                
+                const textoBtn = document.getElementById('textoBtn');
+                const textoDescarga = translations[idiomaActual].btnDownloading;
+
+                // Barra de progreso integrada en el callback
+                clasificadorIA = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli', {
+                    progress_callback: (data) => {
+                        if (data.status === 'progress' || data.status === 'downloading') {
+                            let pct = data.progress ? Math.round(data.progress) : 0;
+                            textoBtn.innerText = `${textoDescarga} (${pct}%)`;
+                        } else if (data.status === 'ready') {
+                            textoBtn.innerText = translations[idiomaActual].btnAnalyzing;
+                        }
+                    }
+                });
             }
             return clasificadorIA;
         }
@@ -199,7 +329,6 @@
             const iconoBtnOriginal = document.getElementById('iconoBtn').outerHTML;
             
             alerta.style.display = 'none';
-            
             if (!input.trim()) return;
 
             if (modoActual === 'texto') {
@@ -209,12 +338,11 @@
                     alerta.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <div>
-                            <strong>Prompt demasiado corto (${numPalabras} palabras):</strong><br> 
-                            Para obtener mejores resultados, define un <strong>rol</strong>, el <strong>contexto</strong> y el <strong>formato</strong> que deseas antes de comprimir.
+                            <strong>${translations[idiomaActual].alertShortTitle} (${numPalabras}):</strong><br> 
+                            ${translations[idiomaActual].alertShortDesc}
                         </div>
                     `;
                     alerta.style.display = 'flex';
-                    // Reiniciar Turnstile para la próxima vez
                     if (typeof turnstile !== 'undefined') turnstile.reset();
                     btn.disabled = true;
                     return;
@@ -222,8 +350,8 @@
 
                 try {
                     btn.disabled = true;
-                    document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`; 
-                    textoBtn.innerText = clasificadorIA ? "Analizando semántica..." : "Descargando IA local (Solo la 1ra vez)...";
+                    document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg><style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>`; 
+                    textoBtn.innerText = clasificadorIA ? translations[idiomaActual].btnAnalyzing : translations[idiomaActual].btnDownloading;
 
                     const clasificador = await obtenerClasificador();
                     
@@ -243,27 +371,27 @@
                         alerta.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
                             <div>
-                                <strong>Contexto no detectado:</strong><br> 
-                                La Inteligencia Artificial analizó tu texto y determinó que carece de coherencia técnica o de negocios. Por favor, sé más específico.
+                                <strong>${translations[idiomaActual].alertIrrTitle}:</strong><br> 
+                                ${translations[idiomaActual].alertIrrDesc}
                             </div>
                         `;
                         alerta.style.display = 'flex';
                         
-                        textoBtn.innerText = "Comprimir Contexto Gratis";
+                        textoBtn.innerText = translations[idiomaActual].btnCompress;
                         document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
                         
-                        // Reiniciar Turnstile para obligar a nueva validación
                         if (typeof turnstile !== 'undefined') turnstile.reset();
                         return;
                     }
                 } catch (error) {
                     console.error("Error cargando el validador semántico:", error);
                 } finally {
-                    textoBtn.innerText = "Comprimir Contexto Gratis";
+                    textoBtn.innerText = translations[idiomaActual].btnCompress;
                     document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
                 }
             }
 
+            // Proceso de compresión
             const tokensAntes = Math.ceil(input.length / 4);
             let output = input;
 
@@ -295,18 +423,18 @@
             const costoEvitado = ((tokensAntes - tokensDespues) * 0.000005).toFixed(4);
 
             document.getElementById('txtResultado').innerText = output;
-            document.getElementById('statAhorro').innerText = `¡Ahorro del ${ahorro}%!`;
+            document.getElementById('statAhorro').innerText = `${translations[idiomaActual].statSavePrefix}${ahorro}%!`;
             document.getElementById('statTokens').innerText = `Tokens: ${tokensAntes} ➔ ${tokensDespues}`;
-            document.getElementById('statDinero').innerText = `Dinero evitado: ~$${costoEvitado} USD`;
+            document.getElementById('statDinero').innerText = `${translations[idiomaActual].moneySavedPrefix}${costoEvitado}`;
             
             document.getElementById('seccionResultado').style.display = 'block';
             
             document.getElementById('btnCopiar').innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                Copiar Resultado
+                <span id="txtBtnCopiar">${translations[idiomaActual].btnCopy}</span>
             `;
 
-            // Finalmente, reiniciamos Turnstile y bloqueamos el botón para la próxima ejecución
+            // Reset y bloqueo
             if (typeof turnstile !== 'undefined') {
                 turnstile.reset();
                 document.getElementById('btnPrincipal').disabled = true;
@@ -318,10 +446,14 @@
             navigator.clipboard.writeText(texto).then(() => {
                 document.getElementById('btnCopiar').innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    ¡Copiado!
+                    <span id="txtBtnCopiar">${translations[idiomaActual].btnCopied}</span>
                 `;
             });
         }
+
+        // Forzar idioma según navegador por defecto (Opcional, ahora inicia en ES)
+        // const userLang = navigator.language || navigator.userLanguage;
+        // if(userLang.startsWith('en')) cambiarIdioma('en');
     </script>
 </body>
 </html>
