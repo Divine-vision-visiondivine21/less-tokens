@@ -15,6 +15,9 @@
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
     <img src="https://img.shields.io/badge/Transformers.js-FF6F00?style=flat-square&logo=huggingface&logoColor=white" alt="Transformers.js" />
     <img src="https://img.shields.io/badge/100%25%20Local-Privacy%20First-4CAF50?style=flat-square" alt="Privacy First" />
+    <a href="https://github.com/sponsors/TU_USUARIO">
+      <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=flat-square&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors" />
+    </a>
   </p>
 </div>
 
@@ -66,6 +69,21 @@ El **Reductor de Tokens Inteligente** es una herramienta web desarrollada por [R
 4. Haz clic en **Comprimir Contexto Gratis**. (La primera vez, descargará un modelo de IA local de ~100MB a la caché de tu navegador).
 5. ¡Copia el resultado optimizado y mira cuánto dinero ahorraste!
 
+---
+
+## ☕ Support the Project / Apoya el Proyecto
+
+If this tool has saved you time or reduced your API costs, consider sponsoring the development of future features for RFJ Software.
+
+Si esta herramienta te ha ahorrado tiempo o costos en tus APIs, considera patrocinar el desarrollo de futuras funcionalidades para RFJ Software.
+
+<p align="center">
+  <a href="https://github.com/sponsors/TU_USUARIO">
+    <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors">
+  </a>
+</p>
+
+---
 
 <div align="center">
   <p>Made with ❤️ by <b><a href="https://rfjsoftware.com">RFJ Software</a></b></p>
