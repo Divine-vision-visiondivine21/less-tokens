@@ -25,8 +25,12 @@
         }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--text); line-height: 1.6; background-color: #fff; position: relative; }
         
-        /* Selector de Idioma */
-        .lang-switch { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; }
+        /* Selector de Idioma y GitHub */
+        .lang-switch { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; }
+        .github-link { color: #555; display: flex; align-items: center; transition: color 0.2s; margin-right: 10px; }
+        .github-link:hover { color: var(--primary); }
+        .footer-github { display: inline-block; margin-top: 10px; font-size: 0.9rem; color: #555; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .footer-github:hover { color: var(--primary); text-decoration: underline; }
         .lang-btn { background: none; border: 1px solid #ccc; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #555; transition: 0.2s; }
         .lang-btn:hover { background: #f0f0f0; }
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -82,6 +86,9 @@
 <body>
     
     <div class="lang-switch">
+        <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="github-link" title="Ver código en GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        </a>
         <button class="lang-btn active" onclick="cambiarIdioma('es')" id="btn-es">ES</button>
         <button class="lang-btn" onclick="cambiarIdioma('en')" id="btn-en">EN</button>
     </div>
@@ -165,7 +172,11 @@
     </section>
 
     <footer class="footer-branding">
-        <span data-i18n="footerPrefix">Una herramienta desarrollada por </span><a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a>
+        <span data-i18n="footerPrefix">Una herramienta desarrollada por </span><a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a><br>
+        <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="footer-github">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span data-i18n="footerGithub">Danos una estrella en GitHub</span>
+        </a>
     </footer>
 
     <script>
@@ -202,7 +213,8 @@
                 alertIrrTitle: "Contexto no detectado",
                 alertIrrDesc: "La Inteligencia Artificial analizó tu texto y determinó que carece de coherencia técnica o de negocios. Por favor, sé más específico.",
                 statSavePrefix: "¡Ahorro del ",
-                moneySavedPrefix: "Dinero evitado: ~$"
+                moneySavedPrefix: "Dinero evitado: ~$",
+                footerGithub: "Código Abierto: Danos una estrella en GitHub"
             },
             en: {
                 pageTitle: "AI Token Reducer - RFJ Software",
@@ -235,7 +247,8 @@
                 alertIrrTitle: "Context not detected",
                 alertIrrDesc: "The Artificial Intelligence analyzed your text and determined that it lacks technical or business coherence. Please be more specific.",
                 statSavePrefix: "Savings: ",
-                moneySavedPrefix: "Money saved: ~$"
+                moneySavedPrefix: "Money saved: ~$",
+                footerGithub: "Open Source: Star us on GitHub"
             }
         };
 
