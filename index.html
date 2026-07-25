@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reductor de Tokens IA - RFJ Software</title>
     <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens hasta un 90% de forma segura y local en tu navegador.">
+    
+    <!-- Script de Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
     <style>
         :root { 
             --primary: #001f5b; 
@@ -35,14 +39,16 @@
         textarea { width: 100%; height: 180px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; resize: vertical; font-family: inherit; }
         textarea:focus { border-color: var(--primary); outline: none; }
         
-        /* Alertas */
         .alerta-calidad { display: none; align-items: center; gap: 10px; padding: 12px 15px; border-radius: 6px; margin: 10px 0; font-size: 0.95rem; line-height: 1.4; }
         .alerta-advertencia { background-color: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
         .alerta-error { background-color: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
         
+        /* Contenedor para centrar Turnstile */
+        .turnstile-container { display: flex; justify-content: center; margin: 15px 0; }
+
         .btn-principal { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin: 15px 0; transition: background 0.2s; }
-        .btn-principal:hover { background: var(--primary-hover); }
-        .btn-principal:disabled { background: #6c757d; cursor: not-allowed; }
+        .btn-principal:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-principal:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.8; }
         
         .privacidad-tag { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: var(--success); font-weight: bold; margin-bottom: 25px; }
         
@@ -91,10 +97,16 @@
 
     <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
     
-    <!-- Contenedor para mostrar alertas de validación de prompts -->
     <div id="alertaCalidad" class="alerta-calidad"></div>
 
-    <button id="btnPrincipal" class="btn-principal" onclick="procesarOptimizacion()">
+    <!-- Integración del Widget de Cloudflare Turnstile -->
+    <div class="turnstile-container">
+        <!-- IMPORTANTE: Reemplaza TU_SITEKEY_AQUI con tu clave pública de Cloudflare -->
+        <div class="cf-turnstile" data-sitekey="TU_SITEKEY_AQUI" data-callback="turnstileCompletado" data-theme="light"></div>
+    </div>
+
+    <!-- El botón inicia bloqueado (disabled) -->
+    <button id="btnPrincipal" class="btn-principal" onclick="procesarOptimizacion()" disabled>
         <svg id="iconoBtn" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
         <span id="textoBtn">Comprimir Contexto Gratis</span>
     </button>
@@ -120,7 +132,6 @@
         </div>
     </div>
 
-    <!-- SECCIÓN SEO Y MARKETING -->
     <section class="seo-section">
         <h2>Preguntas Frecuentes sobre la Reducción de Tokens</h2>
         <div class="faq-item">
@@ -147,7 +158,15 @@
 
     <script>
         let modoActual = 'texto';
-        let clasificadorIA = null; // Variable para almacenar el modelo en caché
+        let clasificadorIA = null;
+        let tokenDeValidacion = ""; 
+
+        // Función que llama Turnstile cuando valida que es humano
+        function turnstileCompletado(token) {
+            tokenDeValidacion = token;
+            // Desbloqueamos el botón
+            document.getElementById('btnPrincipal').disabled = false;
+        }
 
         function cambiarPestana(modo, boton) {
             modoActual = modo;
@@ -164,18 +183,15 @@
             document.getElementById('txtOriginal').placeholder = placeholders[modo];
         }
 
-        // Función para cargar el modelo bajo demanda
         async function obtenerClasificador() {
             if (!clasificadorIA) {
                 const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
-                env.allowLocalModels = false; // Forza a usar el modelo del CDN
-                // Descarga un modelo de Zero-Shot Classification
+                env.allowLocalModels = false;
                 clasificadorIA = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
             }
             return clasificadorIA;
         }
 
-        // Cambiada a asíncrona (async) para permitir la carga de la IA
         async function procesarOptimizacion() {
             const input = document.getElementById('txtOriginal').value;
             const alerta = document.getElementById('alertaCalidad');
@@ -187,7 +203,6 @@
             
             if (!input.trim()) return;
 
-            // --- FASE 1: VALIDACIÓN ESTRUCTURAL ---
             if (modoActual === 'texto') {
                 const numPalabras = input.trim().split(/\s+/).length;
                 if (numPalabras < 10) {
@@ -200,19 +215,19 @@
                         </div>
                     `;
                     alerta.style.display = 'flex';
+                    // Reiniciar Turnstile para la próxima vez
+                    if (typeof turnstile !== 'undefined') turnstile.reset();
+                    btn.disabled = true;
                     return;
                 }
 
-                // --- FASE 2: VALIDACIÓN SEMÁNTICA CON TRANSFORMERS.JS ---
                 try {
-                    // Cambiar UI a estado de carga
                     btn.disabled = true;
-                    document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`; // Icono de carga
+                    document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`; 
                     textoBtn.innerText = clasificadorIA ? "Analizando semántica..." : "Descargando IA local (Solo la 1ra vez)...";
 
                     const clasificador = await obtenerClasificador();
                     
-                    // Definimos temas relevantes para RFJ Software
                     const categoriasPermitidas = [
                         'tecnología, bases de datos y desarrollo de software',
                         'estrategia de marketing y negocios B2B',
@@ -224,7 +239,6 @@
                     const temaPrincipal = resultadoSemantico.labels[0];
                     const probabilidad = resultadoSemantico.scores[0];
 
-                    // Si la IA está muy segura de que es spam o irrelevante
                     if (temaPrincipal === 'temas irrelevantes o spam' && probabilidad > 0.45) {
                         alerta.className = 'alerta-calidad alerta-error';
                         alerta.innerHTML = `
@@ -236,24 +250,21 @@
                         `;
                         alerta.style.display = 'flex';
                         
-                        // Restaurar botón y abortar
-                        btn.disabled = false;
                         textoBtn.innerText = "Comprimir Contexto Gratis";
                         document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
+                        
+                        // Reiniciar Turnstile para obligar a nueva validación
+                        if (typeof turnstile !== 'undefined') turnstile.reset();
                         return;
                     }
                 } catch (error) {
                     console.error("Error cargando el validador semántico:", error);
-                    // Si falla la carga del modelo (ej. sin internet), permitimos que el código continúe silenciosamente.
                 } finally {
-                    // Restaurar botón sin importar si fue exitoso o falló
-                    btn.disabled = false;
                     textoBtn.innerText = "Comprimir Contexto Gratis";
                     document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
                 }
             }
 
-            // --- FASE 3: COMPRESIÓN DE TOKENS (Tu código original) ---
             const tokensAntes = Math.ceil(input.length / 4);
             let output = input;
 
@@ -295,6 +306,12 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Copiar Resultado
             `;
+
+            // Finalmente, reiniciamos Turnstile y bloqueamos el botón para la próxima ejecución
+            if (typeof turnstile !== 'undefined') {
+                turnstile.reset();
+                document.getElementById('btnPrincipal').disabled = true;
+            }
         }
         
         function copiarTexto() {
