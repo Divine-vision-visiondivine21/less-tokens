@@ -591,6 +591,131 @@ const PERFILES={
   agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0.55}
 };
 
+function detectarLenguaje(src){
+  const s = src.slice(0, 4000);
+  if (/^\s*<(!doctype|html|\?xml|[a-z]+[\s>])/i.test(src.trim())) return 'html';
+  if (/^\s*(def |class |import |from\s+\S+\s+import|@\w+\s*$|if __name__)/m.test(s) && !/[;{]\s*$/m.test(s)) return 'python';
+  if (/^\s*(#|--|;)/m.test(s) && !/[{};]/.test(s)) return 'hash';
+  return 'clike';
+}
+
+function limpiarCLike(src){
+  let out = '', i = 0, prev = '', prevSig = '';
+  const n = src.length;
+  const emitir = c => { out += c; prev = c; if(!/\s/.test(c)) prevSig = c; };
+
+  while(i < n){
+    const c = src[i], c2 = src[i+1];
+    
+    // Elimina comentarios //
+    if(c === '/' && c2 === '/'){ 
+      while(i < n && src[i] !== '\n') i++; 
+      continue; 
+    }
+    
+    // Elimina comentarios /* ... */
+    if(c === '/' && c2 === '*'){ 
+      i += 2; 
+      while(i < n && !(src[i] === '*' && src[i+1] === '/')) i++; 
+      i += 2; 
+      continue; 
+    }
+
+    // Respeta cadenas de texto
+    if(c === '"' || c === "'" || c === '`'){
+      const q = c; emitir(c); i++;
+      while(i < n){
+        if(src[i] === '\\'){ out += src[i] + (src[i+1] || ''); i += 2; continue; }
+        const ch = src[i]; out += ch; i++;
+        if(ch === q) break;
+      }
+      prev = q; prevSig = q; continue;
+    }
+
+    // Normaliza espacios multiples pero respeta saltos de línea para mantener sintaxis
+    if(c === ' ' || c === '\t'){
+      let j = i; while(j < n && (src[j] === ' ' || src[j] === '\t')) j++;
+      if(prev === '\n' || prev === ''){ i = j; continue; }
+      if(j >= n || src[j] === '\n' || src[j] === '\r'){ i = j; continue; }
+      out += ' '; prev = ' '; i = j; continue;
+    }
+
+    if(c === '\n' || c === '\r'){
+      let j = i; while(j < n && /[\r\n \t]/.test(src[j])) j++;
+      if(out && prev !== '\n'){ out += '\n'; prev = '\n'; }
+      i = j; continue;
+    }
+
+    emitir(c); i++;
+  }
+  return out.split('\n').map(l => l.replace(/[ \t]+$/, '')).filter(l => l.length).join('\n').trim();
+}
+
+function limpiarPython(src){
+  const lineas = src.replace(/\r\n?/g, '\n').split('\n');
+  const res = []; let triple = null;
+  for(const raw of lineas){
+    if(triple){ res.push(raw.replace(/\s+$/, '')); if(raw.includes(triple)) triple = null; continue; }
+    let out = '', i = 0, q = null;
+    const linea = raw.replace(/\s+$/, '');
+    while(i < linea.length){
+      const c = linea[i];
+      if(q){ if(c === '\\'){ out += c + (linea[i+1] || ''); i += 2; continue; } out += c; if(c === q) q = null; i++; continue; }
+      if(c === '#') break;
+      if(c === '"' || c === "'"){
+        const tri = linea.substr(i, 3);
+        if(tri === '"""' || tri === "'''"){
+          const resto = linea.slice(i + 3), idx = resto.indexOf(tri);
+          if(idx >= 0){ out += tri + resto.slice(0, idx + 3); i += 3 + idx + 3; }
+          else { out += tri + resto; i = linea.length; triple = tri; }
+          continue;
+        }
+        q = c; out += c; i++; continue;
+      }
+      out += c; i++;
+    }
+    out = out.replace(/\s+$/, '');
+    if(!out.trim()) continue;
+    res.push(out);
+  }
+  return res.join('\n').trim();
+}
+
+function limpiarHash(src){
+  return src.replace(/\r\n?/g, '\n').split('\n')
+    .map(l => l.replace(/(^|\s)(#|--|;;?)\s.*$/, '').replace(/\s+$/, ''))
+    .filter(l => l.trim()).join('\n').trim();
+}
+
+function limpiarHtml(src){
+  return src.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\r\n?/g, '\n').split('\n').map(l => l.trim()).filter(Boolean).join('\n').trim();
+}
+
+// FUNCIONES PRINCIPALES INVOCADAS DESDE PROCESAR
+function comprimirCodigo(src){
+  const lang = detectarLenguaje(src);
+  let out;
+  if(lang === 'python') out = limpiarPython(src);
+  else if(lang === 'html') out = limpiarHtml(src);
+  else if(lang === 'hash') out = limpiarHash(src);
+  else out = limpiarCLike(src);
+  return { texto: out, lenguaje: lang };
+}
+
+function comprimirJson(src){
+  const t = src.trim();
+  try { return { texto: JSON.stringify(JSON.parse(t)), nota: 'json' }; } catch(e){}
+  const lineas = t.split('\n').map(l => l.trim()).filter(Boolean);
+  if(lineas.length > 1){
+    try { return { texto: lineas.map(l => JSON.stringify(JSON.parse(l))).join('\n'), nota: 'jsonl' }; } catch(e){}
+  }
+  if(/^\s*<[?a-zA-Z]/.test(t)){
+    return { texto: t.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+</g, '><').trim(), nota: 'xml' };
+  }
+  return { texto: t.split('\n').map(l => l.replace(/\s+$/,'')).filter(l => l.trim()).join('\n'), nota: 'invalido' };
+}
+
 async function comprimirTexto(input, nivel) {
   const cfg = PERFILES[nivel];
   const eliminados = [];
