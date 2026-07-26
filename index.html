@@ -344,52 +344,71 @@
                 document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg><style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>`; 
 
                 if (modoActual === 'texto') {
-                    // 1. Dividir por oraciones
-                    let oraciones = input
+                    // 1. Separar el texto en oraciones
+                    const oraciones = input
                         .replace(/[\r\n]+/g, ' ')
-                        .split(/(?<=[.?!])\s+/);
+                        .split(/(?<=[.?!])\s+/)
+                        .map(o => o.trim())
+                        .filter(o => o.length > 0);
                 
-                    // 2. Oraciones que se eliminan POR COMPLETO si aparecen solas
-                    const oracionesBasura = [
-                        /^(hola|buenos días|buenas tardes|buenas noches|saludos|estimado|estimada)\b/i,
-                        /^espero\s+(que\s+)?(se\s+encuentre|estés)\s+bien/i,
-                        /^(me|nos)\s+podría(n)?\s+ayudar\b/i,
-                        /^(quedo|quedamos)\s+.*(agradecido|atento|a la espera)/i,
-                        /^(saludos\s+cordiales|muchas\s+gracias|gracias\s+de\s+antemano)/i,
-                        /^(por\s+favor\s+)?explíquemelo\b/i
-                    ];
+                    if (oraciones.length <= 1) {
+                        output = input;
+                    } else {
+                        // 2. Lista de palabras "vacías" o de baja entropía (Stop Words Bilingües)
+                        const stopWords = new Set([
+                            'hola', 'buenas', 'tardes', 'dias', 'noches', 'saludos', 'gracias', 'favor',
+                            'espero', 'encuentre', 'bien', 'quisiera', 'gustaria', 'ayudar', 'cosita',
+                            'hello', 'hi', 'good', 'morning', 'afternoon', 'thanks', 'please', 'would',
+                            'like', 'help', 'hope', 'well', 'dear', 'regards', 'ayuda'
+                        ]);
                 
-                    let oracionesFiltradas = oraciones.filter(oracion => {
-                        const oLimpia = oracion.trim();
-                        return !oracionesBasura.some(patron => patron.test(oLimpia));
-                    });
+                        // 3. Calcular la densidad de información relevante por oración
+                        const oracionesPuntuadas = oraciones.map((oracion, index) => {
+                            const palabras = oracion.toLowerCase().match(/\b[a-záéíóúñüa-z]+\b/gi) || [];
+                            if (palabras.length === 0) return { oracion, score: 0, index };
                 
-                    let limpio = oracionesFiltradas.join(' ');
+                            // Contar cuantas palabras son "de contenido real" vs palabras de relleno
+                            let palabrasUtiles = 0;
+                            palabras.forEach(p => {
+                                if (!stopWords.has(p) && p.length > 3) {
+                                    palabrasUtiles++;
+                                }
+                            });
                 
-                    // 3. Rellenos/muletillas internas
-                    const rellenosInternos = [
-                        /\b(por favor|súper rápida|si no es mucha molestia|me gustaría mucho que)\b/gi,
-                        /\b(analizara detenidamente|lo que pasa es que|básicamente|en realidad)\b/gi,
-                        /\b(el siguiente tema,\s*ya que)\b/gi,
-                        /,\s*pero\s+explíquemelo\.?/gi
-                    ];
+                            // Ratio de densidad informativa
+                            const densidad = palabrasUtiles / palabras.length;
+                            
+                            // Penalizar oraciones que son puramente fórmulas de cortesía cortas
+                            const esCortesíaPura = palabras.every(p => stopWords.has(p) || p.length <= 3);
+                            const score = esCortesíaPura ? 0 : densidad * palabrasUtiles;
                 
-                    rellenosInternos.forEach(patron => {
-                        limpio = limpio.replace(patron, '');
-                    });
+                            return { oracion, score, index };
+                        });
                 
-                    // 4. Saneamiento de puntuación y espacios
-                    limpio = limpio
-                        .replace(/\s+([,.:;?!])/g, '$1')     // Quita espacios antes de signos
-                        .replace(/([,.:;?!])\1+/g, '$1')     // Quita signos duplicados
-                        .replace(/^[,.:;?!\s]+/, '')          // Quita signos sobrantes al inicio
-                        .replace(/\s+/g, ' ')                // Unifica espacios
-                        .trim();
+                        // 4. Filtrar oraciones que no superan el umbral mínimo de información útil
+                        const UMBRAL_INFORMACION = 0.8;
+                        const seleccionadas = oracionesPuntuadas
+                            .filter(item => item.score >= UMBRAL_INFORMACION)
+                            .sort((a, b) => a.index - b.index) // Mantener el orden original
+                            .map(item => item.oracion);
                 
-                    // 5. Corregir Mayúsculas tras cada punto
-                    limpio = limpio.replace(/(^\w|\.\s*\w)/g, letra => letra.toUpperCase());
+                        // 5. Unir y sanear el resultado
+                        let limpio = seleccionadas.join(' ');
                 
-                    output = limpio.length > 0 ? limpio : input;
+                        // Si el filtro fue demasiado estricto y borró todo, mantenemos el texto original
+                        if (limpio.trim().length === 0) {
+                            limpio = input;
+                        }
+                
+                        // Limpieza básica de muletillas de enlace internas
+                        limpio = limpio
+                            .replace(/\b(por favor|please|si no es mucha molestia|if it's not too much trouble)\b/gi, '')
+                            .replace(/\s+([,.:;?!])/g, '$1')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                
+                        output = limpio.charAt(0).toUpperCase() + limpio.slice(1);
+                    }
                 } else if (modoActual === 'codigo') {
                     // Minificación segura de código eliminando comentarios/espacios (Preservando Strings)
                     const regexCodigo = /(["'`])(?:(?=(\\?))\2.)*?\1|\/\*[\s\S]*?\*\/|\/\/.*$/gm;
