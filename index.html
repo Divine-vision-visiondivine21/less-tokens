@@ -595,18 +595,16 @@ async function comprimirTexto(input,nivel){
         for (const o of b.oraciones) {
           const antes = o.texto;
           let limpio = quitarRelleno(o.texto);
-          
-          // Limpia puntuación o conectores iniciales huérfanos sobrantes (ej: "^. ", "^, ")
-          limpio = limpio.replace(/^[\s,;:.-]+/, '').trim();
   
-          // Si lo que queda es súper corto (< 3 palabras) y no es protegida, se considera residuo de cortesía
-          const palabrasUtiles = limpio.split(/\s+/).filter(w => w.length > 2);
-          
-          if (!limpio || (!o.protegida && palabrasUtiles.length < 2)) {
-            o.mantener = false; 
+          // Contamos cuántas palabras reales quedan (excluyendo signos)
+          const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
+  
+          // Si se quedó sin palabras con sustancia o solo quedaron conectores
+          if (!limpio || palabrasReales.length < 2) {
+            o.mantener = false;
             eliminados.push({ texto: antes, motivo: 'cortesia' });
-          } else { 
-            o.texto = limpio; 
+          } else {
+            o.texto = limpio;
           }
         }
       }
