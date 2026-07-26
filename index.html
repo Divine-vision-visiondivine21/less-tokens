@@ -136,11 +136,8 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="qwen">Qwen 0.5B Chat (IA Generativa SLM) · ~350 MB</option>
-      <option value="multi" selected>Multilingüe Equilibrado · ~110 MB</option>
-      <option value="mpnet_multi">MPNet Multilingüe (Alta Precisión ES) · ~430 MB</option>
-      <option value="bge_base">BGE Base (Alta Precisión EN) · ~220 MB</option>
-      <option value="rapido">Rápido (Inglés) · ~23 MB</option>
+      <option value="mpnet_multi" selected>MPNet Multilingüe (Máxima Precisión ES/EN) · ~220 MB</option>
+      <option value="multi">MiniLM Multilingüe (Ligero) · ~88 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -548,11 +545,8 @@ function seleccionarOraciones(unidades, vectores, opts){
    3. TRANSFORMERS.JS (Carga Global Segura)
    ========================================================================= */
 const MODELOS = {
-  qwen: { id: 'Xenova/Qwen1.5-0.5B-Chat', tipo: 'generativo', webgpu: true },
-  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', tipo: 'embedding', webgpu: true },
   mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2', tipo: 'embedding', webgpu: true },
-  bge_base: { id: 'Xenova/bge-base-en-v1.5', tipo: 'embedding', webgpu: true },
-  rapido: { id: 'Xenova/all-MiniLM-L6-v2', tipo: 'embedding', webgpu: false }
+  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', tipo: 'embedding', webgpu: true }
 };
 const LOTE = 16;
 
@@ -566,6 +560,7 @@ async function obtenerGenerador(claveModelo) {
   const T = translations[idiomaActual];
   
   const options = {
+    quantized: true,
     progress_callback: d => {
       if (d.status === 'progress' || d.status === 'downloading') {
         const pct = d.progress ? Math.round(d.progress) : 0;
@@ -585,12 +580,16 @@ async function obtenerGenerador(claveModelo) {
 
 async function cargarLib() {
   if (typeof window.transformers !== 'undefined' && window.transformers.pipeline) {
-    window.transformers.env.allowLocalModels = false;
+    window.transformers.env.allowLocalModels = true;
+    window.transformers.env.allowRemoteModels = true;
+    window.transformers.env.localURL = 'https://cdn.rfj.app/models/';
     window.transformers.env.useBrowserCache = true;
     return window.transformers;
   }
   if (typeof window.Transformers !== 'undefined' && window.Transformers.pipeline) {
-    window.Transformers.env.allowLocalModels = false;
+    window.Transformers.env.allowLocalModels = true;
+    window.Transformers.env.allowRemoteModels = true;
+    window.Transformers.env.localURL = 'https://cdn.rfj.app/models/';
     window.Transformers.env.useBrowserCache = true;
     return window.Transformers;
   }
@@ -633,6 +632,7 @@ async function obtenerExtractor(claveModelo) {
   const T = translations[idiomaActual];
   
   const options = {
+    quantized: true,
     progress_callback: d => {
       if (d.status === 'progress' || d.status === 'downloading') {
         const pct = d.progress ? Math.round(d.progress) : 0;
