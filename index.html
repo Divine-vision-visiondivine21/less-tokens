@@ -287,28 +287,28 @@ const translations = {
    ========================================================================= */
 
 const RELLENO = [
-  // Cortesía ampliada (ES / EN)
-  [/^\s*(hola|hey|hi|hello|buen(os|as) (d[íi]as|tardes|noches))\b[\s,.!¡]*/i, ''],
+  // Greetings (con o sin 'muy')
+  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*/i, ''],
+  
+  // Politeness & courtesy phrasing
   [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
-  [/\bsi\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
-  [/\b(ser[íi]as?|seria)\s+(tan\s+)?amable\s+(de\s+)?\b[,\s]*/gi, ''],
-  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado)?\b[.,\s]*/gi, ''],
+  [/\b(y\s+)?si\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
+  [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
+  
+  // Thanks & closings
+  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,\s]*/gi, ''],
+  [/\bpor\s+tu\s+respuesta\b[.,\s]*/gi, ''],
   [/\bespero\s+que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)[^.,;]*[.,;]?\s*/gi, ''],
   [/\bte\s+(lo\s+)?agradecer[ií]a\s+(mucho\s+)?(si|que)\b\s*/gi, ''],
+  
+  // Filler starters ("podrías decirme", "quisiera saber")
+  [/^\s*(podr[íi]as|puedes)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b/i, 'explicame'],
+  
+  // Redundant transitions
   [/\bcomo\s+(ya\s+)?(sabes|sabr[áa]s|es\s+de\s+tu\s+conocimiento)\b[,\s]*/gi, ''],
   [/\bcabe\s+(destacar|mencionar|se[ñn]alar|resaltar)\s+que\b\s*/gi, ''],
   [/\bes\s+importante\s+(destacar|mencionar|se[ñn]alar|notar)\s+que\b\s*/gi, ''],
-  [/\ben\s+mi\s+(humilde\s+)?opini[óo]n\b[,\s]*/gi, ''],
-  [/\bquisiera\s+(saber|pedirte|solicitarte)\s+(si\s+)?\b/gi, ''],
-  [/\bme\s+gustar[íi]a\s+(que\s+)?\b/gi, ''],
-  // Simplificaciones
-  [/\bcon\s+(el\s+fin|el\s+objetivo|el\s+prop[óo]sito)\s+de\b/gi, 'para'],
-  [/\ba\s+fin\s+de\s+que\b/gi, 'para que'],
-  [/\bdebido\s+al\s+hecho\s+de\s+que\b/gi, 'porque'],
-  [/\ben\s+el\s+caso\s+de\s+que\b/gi, 'si'],
-  [/\bun\s+(gran\s+)?n[úu]mero\s+(elevado\s+)?de\b/gi, 'muchos'],
-  [/\ben\s+este\s+momento\b/gi, 'ahora'],
-  [/\bde\s+manera\s+(adicional|complementaria)\b/gi, 'ademas']
+  [/\ben\s+mi\s+(humilde\s+)?opini[óo]n\b[,\s]*/gi, '']
 ];
 
 const RE_NEGACION = /\b(no|not|never|nunca|jam[áa]s|sin|except|excepto|salvo|only|solo|s[óo]lo|[úu]nicamente|must|debe|deber[áa]s?|tienes que|siempre|always|required|obligatorio|prohibido|evita|avoid|don'?t|do not|aseg[úu]rate|ensure|make sure)\b/i;
