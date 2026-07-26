@@ -459,7 +459,12 @@ function seleccionarOraciones(unidades, vectores, opts){
   
   let totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
   let objetivo = totalChars * ratioObjetivo;
-  let usados = obligatorias.reduce((s, i) => s + unidades[i].texto.length, 0);
+  // `usados` debe representar los caracteres actualmente conservados (obligatorias +
+  // pendientes), no solo los de las obligatorias: si arranca solo con las obligatorias
+  // casi siempre queda por debajo de "objetivo" y el bucle nunca se ejecuta, por lo que
+  // el modo Agresivo no recortaba nada pese a anunciar ~55%. Además hay que restar el
+  // tamaño de cada oración eliminada para que el bucle converja hacia el ratio real.
+  let usados = totalChars;
 
   // Selección MMR sobre oraciones secundarias
   while(pendientes.length && usados > objetivo){
@@ -474,7 +479,8 @@ function seleccionarOraciones(unidades, vectores, opts){
       if(score < peorScore){ peorScore = score; peor = i; }
     }
     if (peor === -1) break;
-    
+
+    usados -= unidades[peor].texto.length;
     unidades[peor].motivo = 'presupuesto';
     pendientes.splice(pendientes.indexOf(peor), 1);
   }
@@ -730,6 +736,10 @@ async function comprimirTexto(input, nivel) {
 
   const palabrasVistas = new Set();
   const stopWords = new Set(['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante', 'asegurate', 'emplear', 'debes', 'revisa', 'revises', 'uses', 'enviar']);
+  // El umbral de duplicado por nivel viene de PERFILES (antes estaba hardcodeado a 0.40
+  // e ignoraba cfg.umbralDuplicado, por lo que "Seguro" perdía contenido pese a
+  // anunciarse como sin pérdida). umbralDuplicado=1 en "seguro" anula la deduplicación.
+  const umbralNovedad = 1 - cfg.umbralDuplicado;
 
   for (let i = 0; i < unidades.length; i++) {
     const textoActual = unidades[i].texto;
@@ -746,7 +756,7 @@ async function comprimirTexto(input, nivel) {
 
       const ratioNovedad = (palabrasClave.length - repetidas) / palabrasClave.length;
 
-      if (i > 0 && ratioNovedad < 0.40) {
+      if (i > 0 && ratioNovedad < umbralNovedad) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
         eliminados.push({ texto: textoActual, motivo: 'redundante' });
