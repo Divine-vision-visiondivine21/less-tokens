@@ -214,13 +214,13 @@ const translations = {
     lblNivel:"Nivel:", nivSeguro:"Seguro", nivEquilibrado:"Equilibrado", nivAgresivo:"Agresivo",
     lblModelo:"Modelo:", lblPrecio:"USD / 1M tokens:",
     hintSeguro:"Seguro: sin pérdida. Solo normaliza espacios, sangrías y saltos de línea. No se descarga ningún modelo.",
-    hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes detectadas por embeddings. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
+    hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases casi duplicadas detectadas por solapamiento léxico. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
     hintAgresivo:"Agresivo: además recorta hasta ~55% del texto de prosa priorizando por relevancia (MMR). Revisa el resultado antes de usarlo.",
     btnCompress:"Comprimir Contexto Gratis",
     btnDownloading:"Cargando IA local",
     btnTokenizer:"Cargando tokenizador",
     btnAnalyzing:"Analizando vectores semánticos",
-    privacyTag:"Procesamiento Local: tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.",
+    privacyTag:"Procesamiento Local: el texto que pegas se procesa en tu navegador y nunca se envía a ningún servidor (la página sí carga recursos públicos —modelo de IA y captcha— desde CDNs externos).",
     btnCopy:"Copiar Resultado", btnCopied:"¡Copiado!",
     verEliminado:"Ver qué se eliminó",
     faqTitle:"Preguntas Frecuentes sobre la Reducción de Tokens",
@@ -231,7 +231,7 @@ const translations = {
     faq3Q:"¿Es seguro pegar código confidencial aquí?",
     faq3A:"Sí. Toda la lógica se ejecuta en el cliente con JavaScript y WebAssembly. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.",
     faq4Q:"¿Cuánto puedo ahorrar realmente?",
-    faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. La herramienta mide tokens con el tokenizador real, no con estimaciones optimistas.",
+    faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. Medimos con un tokenizador real de la familia GPT; para Claude y Gemini el número es una aproximación cercana, ya que cada proveedor usa su propio tokenizador interno no público. Cuando no se usa el tokenizador real (nivel Seguro, o si falla la carga) lo indicamos junto a la cifra.",
     footerPrefix:"Una herramienta desarrollada por ",
     footerGithub:"Código abierto: danos una estrella en GitHub",
     alertShortTitle:"Texto corto",
@@ -239,6 +239,8 @@ const translations = {
     alertJsonInvalid:"El contenido no es JSON válido. Se aplicó únicamente limpieza de líneas para no corromper los datos.",
     alertNoGain:"Este contenido ya estaba optimizado: comprimirlo más dañaría el significado. Se devuelve prácticamente igual.",
     alertModelo:"Error al cargar el modelo. Se aplicó la limpieza sin pérdida.",
+    aproxLabel:"aprox.",
+    alertTurnstileFail:"No se pudo cargar la verificación anti-bot (Turnstile). Puedes seguir usando la herramienta, pero esta sesión no quedó verificada.",
     statSavePrefix:"Ahorro: ", moneySavedPrefix:"Coste evitado: ~$",
     tokensLabel:"Tokens", motivoRedundante:"redundante", motivoCortesia:"cortesía / relleno", motivoPresupuesto:"fuera de presupuesto"
   },
@@ -253,13 +255,13 @@ const translations = {
     lblNivel:"Level:", nivSeguro:"Safe", nivEquilibrado:"Balanced", nivAgresivo:"Aggressive",
     lblModelo:"Model:", lblPrecio:"USD / 1M tokens:",
     hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks. No model download.",
-    hintEquilibrado:"Balanced: lossless cleanup + removes politeness and redundant sentences detected via embeddings. Instructions, numbers, negations and output formats are always kept.",
+    hintEquilibrado:"Balanced: lossless cleanup + removes politeness and near-duplicate sentences detected via lexical overlap. Instructions, numbers, negations and output formats are always kept.",
     hintAgresivo:"Aggressive: additionally trims prose down to ~55% by relevance ranking (MMR). Review the output before using it.",
     btnCompress:"Compress Context for Free",
     btnDownloading:"Loading local AI",
     btnTokenizer:"Loading tokenizer",
     btnAnalyzing:"Analyzing semantic vectors",
-    privacyTag:"Local Processing: your data is cleaned in your browser and never touches any external server.",
+    privacyTag:"Local Processing: the text you paste is processed in your browser and never sent to any server (the page itself does load public assets —the AI model and the captcha— from external CDNs).",
     btnCopy:"Copy Result", btnCopied:"Copied!",
     verEliminado:"See what was removed",
     faqTitle:"Frequently Asked Questions about Token Reduction",
@@ -270,7 +272,7 @@ const translations = {
     faq3Q:"Is it safe to paste confidential code here?",
     faq3A:"Yes. All logic runs client-side with JavaScript and WebAssembly. The model is downloaded once and cached by the browser; your data is never sent anywhere.",
     faq4Q:"How much can I actually save?",
-    faq4A:"It depends on the content. Indented JSON and commented code compress a lot; well-written prompts compress moderately. Token counts come from the real tokenizer, not optimistic estimates.",
+    faq4A:"It depends on the content. Indented JSON and commented code compress a lot; well-written prompts compress moderately. We measure with a real GPT-family tokenizer; for Claude and Gemini the number is a close approximation, since each provider uses its own non-public internal tokenizer. Whenever the real tokenizer isn't used (Safe level, or if loading fails), we flag it next to the figure.",
     footerPrefix:"A tool developed by ",
     footerGithub:"Open source: star us on GitHub",
     alertShortTitle:"Short text",
@@ -278,6 +280,8 @@ const translations = {
     alertJsonInvalid:"The content is not valid JSON. Only line cleanup was applied so your data is not corrupted.",
     alertNoGain:"This content was already optimized: compressing further would damage meaning. Returned nearly unchanged.",
     alertModelo:"Model failed to load. Lossless cleanup was applied instead.",
+    aproxLabel:"approx.",
+    alertTurnstileFail:"Anti-bot verification (Turnstile) could not be loaded. You can still use the tool, but this session was not verified.",
     statSavePrefix:"Savings: ", moneySavedPrefix:"Cost avoided: ~$",
     tokensLabel:"Tokens", motivoRedundante:"redundant", motivoCortesia:"politeness / filler", motivoPresupuesto:"over budget"
   }
@@ -829,7 +833,7 @@ function setEstado(txt,pct){
 function mostrarAlerta(tipo,html){
   const a=$('alertaCalidad');
   a.className='alerta-calidad alerta-'+tipo;
-  a.innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${html}</div>`;
+  a.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${html}</div>`;
   a.style.display='flex';
 }
 
@@ -879,13 +883,28 @@ $('selNivel').addEventListener('click',e=>{
 
 function turnstileCompletado(token){ tokenValidacion=token; $('btnPrincipal').disabled=false; }
 function turnstileExpirado(){ tokenValidacion=''; $('btnPrincipal').disabled=true; }
-setTimeout(()=>{ if(typeof turnstile==='undefined') $('btnPrincipal').disabled=false; },4000);
+// Si Turnstile no carga (bloqueadores, red, CDN caído) no dejamos el botón inutilizable
+// para siempre, pero tampoco lo desbloqueamos en silencio: se avisa explícitamente.
+// Nota: este token nunca se valida contra un servidor en este archivo (no hay backend
+// aquí), por lo que el captcha ya era solo un gate de UI, no una protección real.
+setTimeout(()=>{
+  if(typeof turnstile==='undefined'){
+    $('btnPrincipal').disabled=false;
+    mostrarAlerta('advertencia', translations[idiomaActual].alertTurnstileFail);
+  }
+},6000);
 
 function estimarTokens(texto) {
-  if (!texto) return 0;
-  // Aproximación BPE realista: ~1.3 tokens por palabra en español
+  if (!texto || !texto.trim()) return 0;
+  // Heurística SIN descargas (se usa cuando no hay tokenizador real cargado):
+  // contar solo palabras subestima mucho en JSON/código compacto, donde casi no
+  // hay espacios que separen "palabras" (ej. un array minificado puede ser una
+  // sola "palabra" larga). Se combina con la regla estándar de ~4 caracteres
+  // por token y se toma la señal más alta para no subestimar el conteo.
   const palabras = texto.trim().split(/\s+/).length;
-  return Math.ceil(palabras * 1.35);
+  const porPalabras = palabras * 1.35;
+  const porCaracteres = texto.length / 4;
+  return Math.max(1, Math.ceil(Math.max(porPalabras, porCaracteres)));
 }
 
 function contarTokens(t) {
@@ -907,7 +926,15 @@ async function procesarOptimizacion(){
   let output=input, eliminados=[], nota='';
 
   try{
-    await obtenerTokenizer();
+    // El nivel "Seguro" promete explícitamente "no se descarga ningún modelo": antes
+    // esta llamada se hacía siempre, sin importar nivel ni modo, contradiciendo esa
+    // promesa (y descargando el tokenizer de forma innecesaria para una limpieza
+    // puramente léxica). Ahora solo se descarga cuando realmente aporta precisión.
+    const evitarDescargaTokenizer = (modoActual==='texto' && nivelActual==='seguro');
+    if(!evitarDescargaTokenizer){
+      await obtenerTokenizer();
+    }
+    const usandoTokenizerReal = !!tokenizer;
     const tokensAntes=contarTokens(input);
 
     if(modoActual==='texto'){
@@ -938,9 +965,16 @@ async function procesarOptimizacion(){
     const precio=parseFloat($('inpPrecio').value)||0;
     const ahorrado=Math.max(0,tokensAntes-tokensDespues)*precio/1e6;
 
+    // Transparencia: si no se usó el tokenizador real (Seguro, o falló la carga),
+    // lo marcamos junto a la cifra en vez de presentarla como medición exacta.
+    const sufijosStats = [];
+    if (nota) sufijosStats.push(nota);
+    if (!usandoTokenizerReal) sufijosStats.push(T.aproxLabel);
+    const sufijoStats = sufijosStats.length ? ' · '+sufijosStats.join(' · ') : '';
+
     $('txtResultado').innerText=output;
     $('statAhorro').innerText=`${T.statSavePrefix}${ahorro}%`;
-    $('statTokens').innerText=`${T.tokensLabel}: ${tokensAntes.toLocaleString()} ➔ ${tokensDespues.toLocaleString()}${nota?' · '+nota:''}`;
+    $('statTokens').innerText=`${T.tokensLabel}: ${tokensAntes.toLocaleString()} ➔ ${tokensDespues.toLocaleString()}${sufijoStats}`;
     $('statDinero').innerText=`${T.moneySavedPrefix}${ahorrado.toFixed(5)}`;
     $('seccionResultado').style.display='block';
 
@@ -954,7 +988,7 @@ async function procesarOptimizacion(){
       $('detalles').style.display='block';
     }
 
-    $('btnCopiar').innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
+    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
   }catch(err){
     console.error('Error procesando:',err);
     mostrarAlerta('error',String(err && err.message ? err.message : err));
@@ -968,7 +1002,7 @@ async function procesarOptimizacion(){
 
 function copiarTexto(){
   navigator.clipboard.writeText($('txtResultado').innerText).then(()=>{
-    $('btnCopiar').innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
+    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
   });
 }
 
