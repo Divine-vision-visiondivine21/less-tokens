@@ -134,10 +134,10 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="multi" selected>Multilingüe · ~110 MB</option>
-      <option value="rapido">Rápido (EN) · ~23 MB</option>
-      <option value="bgem3">E5-Multilingüe (SOTA) · ~120 MB</option>
-      <option value="llama3">Llama-3-8B · Alto consumo</option>
+      <option value="multi" selected>Multilingüe (Recomendado) · ~110 MB</option>
+      <option value="rapido">Rápido (Inglés) · ~23 MB</option>
+      <option value="bge_small">BGE Small (Inglés) · ~67 MB</option>
+      <option value="mpnet">MPNet Base (Alta precisión EN) · ~430 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -297,10 +297,28 @@ const translations = {
    2. MOTOR (Versión Completa y Corregida)
    ========================================================================= */
 
+function esOracionDeCortesía(texto) {
+  if (!texto) return false;
+  const t = texto.toLowerCase().trim();
+  if (/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b/i.test(t)) return true;
+  if (/^\s*(querido|estimado|apreciado)?\s*(modelo|asistente|chatgpt|ia|ai|sistema)\s*(de\s+inteligencia\s+artificial)?\b/i.test(t)) return true;
+  if (/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b/i.test(t)) return true;
+  if (/espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un)/i.test(t)) return true;
+  if (/^(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?/i.test(t)) return true;
+  if (/^(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)?.*(favor|molestia|inconveniente|ayudarme|ayuda)/i.test(t)) return true;
+  if (/^si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)/i.test(t)) return true;
+  if (/^¿?podr[íi]as\s+(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?(ayudarme|ayudar|asistirme)/i.test(t)) return true;
+  if (/^(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?/i.test(t)) return true;
+  if (/^quedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta/i.test(t)) return true;
+  if (/^¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?/i.test(t)) return true;
+  return false;
+}
+
 const RELLENO = [
   // 1. Saludos, vocativos y preguntas de cortesía al inicio
   [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*(\b(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)\b[\s,.!¡]*)?(\b¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b\??[\s,.!¡]*)?/i, ''],
-  [/^\s*(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)[\s,.!¡]*/i, ''],
+  [/^\s*(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)\s*(de\s+inteligencia\s+artificial)?[\s,.!¡]*/i, ''],
+  [/^\s*de\s+inteligencia\s+artificial[\s,.!¡]*/i, ''],
   [/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]|te\s+encuentras)\??[\s,.!¡]*/i, ''],
   
   // 2. Deseos de buen día / charla informal
@@ -529,8 +547,8 @@ function seleccionarOraciones(unidades, vectores, opts){
 const MODELOS = {
   multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
   rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
-  bgem3: { id: 'Xenova/multilingual-e5-small' },
-  llama3: { id: 'Xenova/all-MiniLM-L12-v2' }
+  bge_small: { id: 'Xenova/bge-small-en-v1.5' },
+  mpnet: { id: 'Xenova/all-mpnet-base-v2' }
 };
 const LOTE = 16;
 
@@ -746,6 +764,11 @@ async function comprimirTexto(input, nivel) {
       } else if (b.tipo === 'prosa') {
         for (const o of b.oraciones) {
           const antes = o.texto;
+          if (esOracionDeCortesía(o.texto)) {
+            o.mantener = false;
+            eliminados.push({ texto: antes, motivo: 'cortesia' });
+            continue;
+          }
           let limpio = quitarRelleno(o.texto);
           const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
           if (!limpio || (!o.protegida && palabrasReales.length < 2)) {
