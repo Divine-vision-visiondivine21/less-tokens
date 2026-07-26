@@ -136,7 +136,13 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
     <select id="selModelo">
       <option value="multi" selected>Multilingüe · ~110 MB</option>
       <option value="rapido">Rápido (EN) · ~23 MB</option>
+      <option value="bgem3">BGE-M3 (SOTA Multilingüe) · ~560 MB</option>
+      <option value="llama3">Llama-3-8B · Alto consumo</option>
     </select>
+  </span>
+  <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
+    <input type="checkbox" id="chkWebGPU" style="cursor:pointer;">
+    <label for="chkWebGPU" style="cursor:pointer;" data-i18n="lblWebGPU">Aceleración WebGPU</label>
   </span>
   <span>
     <label for="inpPrecio" data-i18n="lblPrecio">USD / 1M tokens:</label>
@@ -212,7 +218,7 @@ const translations = {
     placeholderCode:"Pega tu código Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios sobrantes sin romper la sintaxis...",
     placeholderJson:"Pega estructuras JSON, JSONL o XML para minificarlas...",
     lblNivel:"Nivel:", nivSeguro:"Seguro", nivEquilibrado:"Equilibrado", nivAgresivo:"Agresivo",
-    lblModelo:"Modelo:", lblPrecio:"USD / 1M tokens:",
+    lblModelo:"Modelo:", lblPrecio:"USD / 1M tokens:", lblWebGPU:"Aceleración WebGPU",
     hintSeguro:"Seguro: sin pérdida. Solo normaliza espacios, sangrías y saltos de línea. No se descarga ningún modelo.",
     hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases casi duplicadas detectadas por solapamiento léxico. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
     hintAgresivo:"Agresivo: además recorta hasta ~55% del texto de prosa priorizando por relevancia (MMR). Revisa el resultado antes de usarlo.",
@@ -253,7 +259,7 @@ const translations = {
     placeholderCode:"Paste your Java, JavaScript, Python code, etc. Comments and extra whitespace are removed without breaking syntax...",
     placeholderJson:"Paste JSON, JSONL or XML structures to minify them...",
     lblNivel:"Level:", nivSeguro:"Safe", nivEquilibrado:"Balanced", nivAgresivo:"Aggressive",
-    lblModelo:"Model:", lblPrecio:"USD / 1M tokens:",
+    lblModelo:"Model:", lblPrecio:"USD / 1M tokens:", lblWebGPU:"WebGPU Acceleration",
     hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks. No model download.",
     hintEquilibrado:"Balanced: lossless cleanup + removes politeness and near-duplicate sentences detected via lexical overlap. Instructions, numbers, negations and output formats are always kept.",
     hintAgresivo:"Aggressive: additionally trims prose down to ~55% by relevance ranking (MMR). Review the output before using it.",
@@ -507,7 +513,9 @@ function seleccionarOraciones(unidades, vectores, opts){
    ========================================================================= */
 const MODELOS = {
   multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
-  rapido: { id: 'Xenova/all-MiniLM-L6-v2' }
+  rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
+  bgem3: { id: 'Xenova/bge-m3' },
+  llama3: { id: 'Xenova/Llama-3-8B-Instruct-ONNX' }
 };
 const LOTE = 16;
 
@@ -526,11 +534,13 @@ async function cargarLib() {
 }
 
 async function obtenerExtractor(claveModelo) {
-  if (extractores[claveModelo]) return extractores[claveModelo];
+  const usarWebGPU = document.getElementById('chkWebGPU') && document.getElementById('chkWebGPU').checked;
+  const cacheKey = claveModelo + (usarWebGPU ? '_webgpu' : '_cpu');
+  if (extractores[cacheKey]) return extractores[cacheKey];
   const { pipeline } = await cargarLib();
   const T = translations[idiomaActual];
   
-  extractores[claveModelo] = await pipeline('feature-extraction', MODELOS[claveModelo].id, {
+  const options = {
     progress_callback: d => {
       if (d.status === 'progress' || d.status === 'downloading') {
         const pct = d.progress ? Math.round(d.progress) : 0;
@@ -539,8 +549,13 @@ async function obtenerExtractor(claveModelo) {
         setEstado(T.btnAnalyzing, 100); 
       }
     }
-  });
-  return extractores[claveModelo];
+  };
+  if (usarWebGPU) {
+    options.device = 'webgpu';
+  }
+  
+  extractores[cacheKey] = await pipeline('feature-extraction', MODELOS[claveModelo].id, options);
+  return extractores[cacheKey];
 }
 
 async function obtenerTokenizer() {
@@ -870,6 +885,7 @@ function cambiarPestana(modo,boton){
   const soloTexto=modo==='texto';
   $('selNivel').parentElement.style.display=soloTexto?'':'none';
   $('wrapModelo').style.display=soloTexto?'':'none';
+  $('wrapWebGPU').style.display=soloTexto?'':'none';
   $('hintNivel').style.display=soloTexto?'':'none';
   actualizarPlaceholder();
 }
