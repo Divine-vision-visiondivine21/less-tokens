@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
 <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens de forma segura y 100% local en tu navegador.">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
@@ -582,15 +584,23 @@ async function obtenerGenerador(claveModelo) {
 }
 
 async function cargarLib() {
-  if (typeof window.transformers !== 'undefined') {
-    window.transformers.env.allowLocalModels = false;
-    window.transformers.env.useBrowserCache = true;
-    return window.transformers;
+  for (let i = 0; i < 15; i++) {
+    if (typeof window.transformers !== 'undefined') {
+      window.transformers.env.allowLocalModels = false;
+      window.transformers.env.useBrowserCache = true;
+      return window.transformers;
+    }
+    if (typeof window.Transformers !== 'undefined') {
+      window.Transformers.env.allowLocalModels = false;
+      window.Transformers.env.useBrowserCache = true;
+      return window.Transformers;
+    }
+    if (typeof pipeline !== 'undefined') {
+      return { pipeline, AutoTokenizer };
+    }
+    await new Promise(r => setTimeout(r, 200));
   }
-  if (typeof pipeline !== 'undefined') {
-    return { pipeline, AutoTokenizer };
-  }
-  throw new Error("No se pudo acceder a Transformers.js");
+  throw new Error("No se pudo acceder a Transformers.js. Comprueba tu conexión o desactiva bloqueadores de CDNs.");
 }
 
 async function obtenerExtractor(claveModelo) {
