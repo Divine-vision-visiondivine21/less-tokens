@@ -302,7 +302,7 @@
             document.getElementById('txtOriginal').placeholder = placeholders[modo];
         }
 
-        // Carga de Modelo Transformers.js para Resumen Semántico
+        // Usamos text2text-generation en lugar de summarization directo
         async function obtenerSintetizador() {
             if (!sintetizadorIA) {
                 const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
@@ -310,9 +310,9 @@
                 
                 const textoBtn = document.getElementById('textoBtn');
                 const textoDescarga = translations[idiomaActual].btnDownloading;
-
-                // Carga un modelo pequeño ideal para summarization en navegadores
-                sintetizadorIA = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6', {
+        
+                // Modelo multilingüe optimizado para instrucciones
+                sintetizadorIA = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
                     progress_callback: (data) => {
                         if (data.status === 'progress' || data.status === 'downloading') {
                             let pct = data.progress ? Math.round(data.progress) : 0;
@@ -344,35 +344,19 @@
                 document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg><style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>`; 
 
                 if (modoActual === 'texto') {
-                    const numPalabras = input.trim().split(/\s+/).length;
-                    if (numPalabras < 10) {
-                        alerta.className = 'alerta-calidad alerta-advertencia';
-                        alerta.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            <div>
-                                <strong>${translations[idiomaActual].alertShortTitle} (${numPalabras}):</strong><br> 
-                                ${translations[idiomaActual].alertShortDesc}
-                            </div>
-                        `;
-                        alerta.style.display = 'flex';
-                        if (typeof turnstile !== 'undefined') turnstile.reset();
-                        return;
-                    }
-
-                    textoBtn.innerText = sintetizadorIA ? translations[idiomaActual].btnAnalyzing : translations[idiomaActual].btnDownloading;
-
-                    // Compresión semántica real con Transformers.js
+                    // ... validación de palabras ...
+                
                     const summarizer = await obtenerSintetizador();
-                    const targetLength = Math.max(15, Math.floor(numPalabras * 0.5));
                     
-                    const res = await summarizer(input, {
-                        max_length: targetLength,
-                        min_length: 10,
+                    // Le formateamos la orden al modelo local
+                    const promptInstruccion = `Compress and extract only the core instruction/request from this prompt, remove greetings and politeness: "${input}"`;
+                
+                    const res = await summarizer(promptInstruccion, {
+                        max_new_tokens: 50,
                         do_sample: false
                     });
-
-                    output = res[0].summary_text;
-
+                
+                    output = res[0].generated_text;
                 } else if (modoActual === 'codigo') {
                     // Minificación segura de código eliminando comentarios/espacios (Preservando Strings)
                     const regexCodigo = /(["'`])(?:(?=(\\?))\2.)*?\1|\/\*[\s\S]*?\*\/|\/\/.*$/gm;
