@@ -350,29 +350,36 @@ function normalizarEspacios(t){
 function quitarRelleno(t){
   let r = t;
   
+  // 1. Aplica reglas del diccionario RELLENO
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
   
+  // 2. Limpieza de cortesías y rodeos
   r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
        .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
-       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,;!]*/gi, '')
-       .replace(/\bpor\s+tu\s+respuesta\b[.,;!]*/gi, '');
+       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+ayuda)?\b[.,;!]*/gi, '')
+       .replace(/\bpor\s+tu\s+(respuesta|ayuda)\b[.,;!]*/gi, '');
 
-  r = r.replace(/^[\s,;:.-]*(y\s+)?(si\s+)?(eres|ser[íi]as?)\s+tan\s+amable[,\s]*/i, '')
-       .replace(/^[\s,;:.-]*¿?\s*(podr[íi]as|puedes|ser[íi]as\s+tan\s+amable\s+de)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b\s*¿?/i, '¿')
+  // 3. Normalización de verbos de cortesía a imperativo directo
+  r = r.replace(/\b(de\s+)?escribir\b/gi, 'escribe')
        .replace(/^[\s,;:.-]+/, '')
        .replace(/\s{2,}/g, ' ')
        .replace(/\s+([,.;:!?])/g, '$1')
        .trim();
 
-  if ((t.includes('¿') || /\?$/.test(t)) && !r.startsWith('¿')) {
+  // 4. Solo añade '¿' SI la oración termina en '?' y no es una afirmación/rol
+  if (/\?$/.test(r) && !r.startsWith('¿')) {
     r = '¿' + r;
   }
 
-  r = r.replace(/^(¿?)([a-záéíóúñ])/i, (_, signo, letra) => signo + letra.toUpperCase());
+  // Quita signos de apertura huérfanos si la oración no es una pregunta
+  if (!/\?$/.test(r)) {
+    r = r.replace(/^[¿¡]\s*/, '');
+  }
 
-  return r;
+  // Capitaliza la primera letra
+  return r.charAt(0).toUpperCase() + r.slice(1);
 }
 
 function limpiarLineaEstructural(linea){
