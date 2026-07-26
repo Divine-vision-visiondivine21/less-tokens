@@ -353,10 +353,10 @@ function normalizarEspacios(t){
 function quitarRelleno(t){
   let r = t;
   
-  // 1. Aplicar reglas globales de relleno
+  // 1. Reglas globales
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
   
-  // 2. Limpieza agresiva de muletillas y conectores sobrantes
+  // 2. Limpieza de conectores y muletillas
   r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
        .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
@@ -364,21 +364,22 @@ function quitarRelleno(t){
        .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,;!]*/gi, '')
        .replace(/\bpor\s+tu\s+respuesta\b[.,;!]*/gi, '');
 
-  // 3. LIMPIEZA DE PREFIJOS DE CORTE EN PREGUNTAS (Remueve "Y si...", "Podrías...", etc. justo antes del ¿)
+  // 3. Normalización de intención (transforma "¿podrías explicarme cómo" en "¿Cómo")
   r = r.replace(/^[\s,;:.-]*(y\s+)?(si\s+)?(eres|ser[íi]as?)\s+tan\s+amable[,\s]*/i, '')
-       .replace(/^[\s,;:.-]*(podr[íi]as|puedes|ser[íi]as\s+tan\s+amable\s+de)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b/i, '¿cómo')
+       .replace(/^[\s,;:.-]*¿?\s*(podr[íi]as|puedes|ser[íi]as\s+tan\s+amable\s+de)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b\s*¿?/i, '¿')
        .replace(/^[\s,;:.-]+/, '')
        .replace(/\s{2,}/g, ' ')
        .replace(/\s+([,.;:!?])/g, '$1')
        .trim();
 
-  // 4. Preserva el signo ¿ si la oración termina en ? o tiene carácter inquisitivo
+  // 4. Asegura la apertura ¿ y CAPITALIZA la primera letra tras el signo
   if ((t.includes('¿') || /\?$/.test(t)) && !r.startsWith('¿')) {
-    // Si la oración empezaba con ¿cómo o ¿qué, nos aseguramos que mantenga la apertura
-    r = '¿' + r.replace(/^¿/, '');
+    r = '¿' + r;
   }
 
-  if(r && /[a-záéíóúñ]/i.test(r[0])) r = r[0].toUpperCase() + r.slice(1);
+  // Capitalización correcta respetando el signo '¿' inicial si existe
+  r = r.replace(/^(¿?)([a-záéíóúñ])/i, (_, signo, letra) => signo + letra.toUpperCase());
+
   return r;
 }
 
