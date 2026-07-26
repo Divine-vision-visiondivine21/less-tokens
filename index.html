@@ -155,7 +155,7 @@
         <h2 data-i18n="faqTitle">Preguntas Frecuentes sobre la Reducción de Tokens</h2>
         <div class="faq-item">
             <h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3>
-            <p data-i18n="faq1A">Nuestra herramienta utiliza modelos de Redes Neuronales locales (Transformers) para comprimir la semántica de texto y algoritmos de minificación para código/JSON directamente en tu navegador.</p>
+            <p data-i18n="faq1A">Nuestra herramienta utiliza modelos de Embeddings vectoriales (Transformers.js) para analizar la importancia semántica de cada oración en cualquier idioma, además de minificación segura para código y JSON.</p>
         </div>
         <div class="faq-item">
             <h3 data-i18n="faq2Q">¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
@@ -163,7 +163,7 @@
         </div>
         <div class="faq-item">
             <h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
-            <p data-i18n="faq3A">Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro en tu navegador. Tus datos jamás se transmiten a través de internet.</p>
+            <p data-i18n="faq3A">Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript y WebAssembly en tu navegador. Tus datos jamás se transmiten a través de internet.</p>
         </div>
         <div class="faq-item">
             <h3 data-i18n="faq4Q">¿Cuánto dinero puedo ahorrar en la API?</h3>
@@ -193,18 +193,18 @@
                 placeholderCode: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
                 placeholderJson: "Pega estructuras JSON o XML para aplanarlas y eliminar toda la sangría innecesaria...",
                 btnCompress: "Comprimir Contexto Gratis",
-                btnDownloading: "Descargando IA local",
-                btnAnalyzing: "Comprimiendo texto con IA...",
+                btnDownloading: "Cargando IA local",
+                btnAnalyzing: "Analizando vectores semánticos...",
                 privacyTag: "Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.",
                 btnCopy: "Copiar Resultado",
                 btnCopied: "¡Copiado!",
                 faqTitle: "Preguntas Frecuentes sobre la Reducción de Tokens",
                 faq1Q: "¿Cómo funciona este reductor de tokens online?",
-                faq1A: "Nuestra herramienta utiliza redes neuronales locales (Transformers) para comprimir el significado de textos sin perder contexto, además de reglas de minificación para código y JSON.",
+                faq1A: "Nuestra herramienta utiliza modelos de Embeddings vectoriales (Transformers.js) para analizar la importancia semántica de cada oración en cualquier idioma, descartando el relleno y la cortesía.",
                 faq2Q: "¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?",
-                faq2A: "Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas. Al eliminar el 'ruido', la IA se enfoca directamente en los datos clave.",
+                faq2A: "Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas.",
                 faq3Q: "¿Es seguro pegar código confidencial o datos de mi empresa aquí?",
-                faq3A: "Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript puro y WebAssembly en tu navegador. Tus prompts o códigos jamás se transmiten a través de internet.",
+                faq3A: "Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript y WebAssembly en tu navegador. Tus prompts o códigos jamás se transmiten a través de internet.",
                 faq4Q: "¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?",
                 faq4A: "Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.",
                 footerPrefix: "Una herramienta desarrollada por ",
@@ -225,16 +225,16 @@
                 placeholderCode: "Paste your Java, JavaScript, Python files, etc. Comments and spaces will be removed...",
                 placeholderJson: "Paste JSON or XML structures to flatten them and remove all unnecessary indentation...",
                 btnCompress: "Compress Context for Free",
-                btnDownloading: "Downloading local AI",
-                btnAnalyzing: "Compressing text with AI...",
+                btnDownloading: "Loading local AI",
+                btnAnalyzing: "Analyzing semantic vectors...",
                 privacyTag: "Local Processing: Your data is cleaned in your browser and never touches any external server.",
                 btnCopy: "Copy Result",
                 btnCopied: "Copied!",
                 faqTitle: "Frequently Asked Questions about Token Reduction",
                 faq1Q: "How does this online token reducer work?",
-                faq1A: "Our tool uses local Neural Networks (Transformers) to compress the meaning of texts without losing context, as well as minification rules for code and JSON.",
+                faq1A: "Our tool uses Vector Embedding models (Transformers.js) to analyze the semantic importance of each sentence in any language, discarding filler and politeness.",
                 faq2Q: "Will Artificial Intelligence still understand my compressed message?",
-                faq2A: "Yes. Advanced models like GPT-4o or Claude 3.5 do not require perfect human grammar or polite connectors to understand complex instructions. By eliminating 'noise', the AI focuses directly on key data.",
+                faq2A: "Yes. Advanced models like GPT-4o or Claude 3.5 do not require perfect human grammar or polite connectors to understand complex instructions.",
                 faq3Q: "Is it safe to paste confidential code or company data here?",
                 faq3A: "It is 100% safe. All logic runs on the client side using pure JavaScript and WebAssembly in your browser. Your prompts or programming codes are never transmitted over the internet.",
                 faq4Q: "How much money can I save on the OpenAI or Anthropic API?",
@@ -250,7 +250,7 @@
 
         // --- LÓGICA PRINCIPAL ---
         let modoActual = 'texto';
-        let sintetizadorIA = null;
+        let extractorEmbeddings = null;
         let tokenDeValidacion = ""; 
         let idiomaActual = 'es';
 
@@ -302,17 +302,17 @@
             document.getElementById('txtOriginal').placeholder = placeholders[modo];
         }
 
-        // Usamos text2text-generation en lugar de summarization directo
-        async function obtenerSintetizador() {
-            if (!sintetizadorIA) {
+        // --- TRANSFORMERS.JS: MODELO DE EMBEDDINGS VECTORIALES ---
+        async function obtenerExtractor() {
+            if (!extractorEmbeddings) {
                 const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
                 env.allowLocalModels = false;
-                
+
                 const textoBtn = document.getElementById('textoBtn');
                 const textoDescarga = translations[idiomaActual].btnDownloading;
-        
-                // Modelo multilingüe optimizado para instrucciones
-                sintetizadorIA = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
+
+                // Carga del modelo ultraligero multilingüe (~23MB)
+                extractorEmbeddings = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
                     progress_callback: (data) => {
                         if (data.status === 'progress' || data.status === 'downloading') {
                             let pct = data.progress ? Math.round(data.progress) : 0;
@@ -323,7 +323,19 @@
                     }
                 });
             }
-            return sintetizadorIA;
+            return extractorEmbeddings;
+        }
+
+        function similitudCoseno(vecA, vecB) {
+            let dotProduct = 0;
+            let normA = 0;
+            let normB = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dotProduct += vecA[i] * vecB[i];
+                normA += vecA[i] * vecA[i];
+                normB += vecB[i] * vecB[i];
+            }
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         }
 
         async function procesarOptimizacion() {
@@ -344,73 +356,70 @@
                 document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg><style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>`; 
 
                 if (modoActual === 'texto') {
-                    // 1. Separar el texto en oraciones
+                    const numPalabras = input.trim().split(/\s+/).length;
+                    if (numPalabras < 10) {
+                        alerta.className = 'alerta-calidad alerta-advertencia';
+                        alerta.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <div>
+                                <strong>${translations[idiomaActual].alertShortTitle} (${numPalabras}):</strong><br> 
+                                ${translations[idiomaActual].alertShortDesc}
+                            </div>
+                        `;
+                        alerta.style.display = 'flex';
+                        if (typeof turnstile !== 'undefined') turnstile.reset();
+                        return;
+                    }
+
+                    textoBtn.innerText = extractorEmbeddings ? translations[idiomaActual].btnAnalyzing : translations[idiomaActual].btnDownloading;
+
+                    // 1. Dividir texto por oraciones
                     const oraciones = input
                         .replace(/[\r\n]+/g, ' ')
                         .split(/(?<=[.?!])\s+/)
                         .map(o => o.trim())
                         .filter(o => o.length > 0);
-                
+
                     if (oraciones.length <= 1) {
-                        output = input;
+                        output = input.trim();
                     } else {
-                        // 2. Lista de palabras "vacías" o de baja entropía (Stop Words Bilingües)
-                        const stopWords = new Set([
-                            'hola', 'buenas', 'tardes', 'dias', 'noches', 'saludos', 'gracias', 'favor',
-                            'espero', 'encuentre', 'bien', 'quisiera', 'gustaria', 'ayudar', 'cosita',
-                            'hello', 'hi', 'good', 'morning', 'afternoon', 'thanks', 'please', 'would',
-                            'like', 'help', 'hope', 'well', 'dear', 'regards', 'ayuda'
-                        ]);
-                
-                        // 3. Calcular la densidad de información relevante por oración
-                        const oracionesPuntuadas = oraciones.map((oracion, index) => {
-                            const palabras = oracion.toLowerCase().match(/\b[a-záéíóúñüa-z]+\b/gi) || [];
-                            if (palabras.length === 0) return { oracion, score: 0, index };
-                
-                            // Contar cuantas palabras son "de contenido real" vs palabras de relleno
-                            let palabrasUtiles = 0;
-                            palabras.forEach(p => {
-                                if (!stopWords.has(p) && p.length > 3) {
-                                    palabrasUtiles++;
-                                }
-                            });
-                
-                            // Ratio de densidad informativa
-                            const densidad = palabrasUtiles / palabras.length;
-                            
-                            // Penalizar oraciones que son puramente fórmulas de cortesía cortas
-                            const esCortesíaPura = palabras.every(p => stopWords.has(p) || p.length <= 3);
-                            const score = esCortesíaPura ? 0 : densidad * palabrasUtiles;
-                
-                            return { oracion, score, index };
-                        });
-                
-                        // 4. Filtrar oraciones que no superan el umbral mínimo de información útil
-                        const UMBRAL_INFORMACION = 0.8;
-                        const seleccionadas = oracionesPuntuadas
-                            .filter(item => item.score >= UMBRAL_INFORMACION)
-                            .sort((a, b) => a.index - b.index) // Mantener el orden original
-                            .map(item => item.oracion);
-                
-                        // 5. Unir y sanear el resultado
-                        let limpio = seleccionadas.join(' ');
-                
-                        // Si el filtro fue demasiado estricto y borró todo, mantenemos el texto original
-                        if (limpio.trim().length === 0) {
-                            limpio = input;
+                        const extractor = await obtenerExtractor();
+
+                        // 2. Extraer vector de la intención global del prompt
+                        const outputGlobal = await extractor(input, { pooling: 'mean', normalize: true });
+                        const vectorGlobal = outputGlobal.data;
+
+                        // 3. Evaluar relevancia semántica de cada oración
+                        const puntuaciones = [];
+                        for (let i = 0; i < oraciones.length; i++) {
+                            const outOracion = await extractor(oraciones[i], { pooling: 'mean', normalize: true });
+                            const vectorOracion = outOracion.data;
+                            const score = similitudCoseno(vectorGlobal, vectorOracion);
+                            puntuaciones.push({ oracion: oraciones[i], score, index: i });
                         }
-                
-                        // Limpieza básica de muletillas de enlace internas
+
+                        // 4. Filtrar frases de bajo valor (saludos/cortesías obtienen scores < 0.45)
+                        const UMBRAL_RELEVANCIA = 0.45;
+                        const oracionesClave = puntuaciones
+                            .filter(item => item.score >= UMBRAL_RELEVANCIA)
+                            .sort((a, b) => a.index - b.index)
+                            .map(item => item.oracion);
+
+                        let limpio = oracionesClave.join(' ');
+                        if (!limpio.trim()) limpio = input;
+
+                        // 5. Sanear muletillas residuales y puntuación
                         limpio = limpio
                             .replace(/\b(por favor|please|si no es mucha molestia|if it's not too much trouble)\b/gi, '')
                             .replace(/\s+([,.:;?!])/g, '$1')
                             .replace(/\s+/g, ' ')
                             .trim();
-                
-                        output = limpio.charAt(0).toUpperCase() + limpio.slice(1);
+
+                        output = limpio.length > 0 ? limpio.charAt(0).toUpperCase() + limpio.slice(1) : input;
                     }
+
                 } else if (modoActual === 'codigo') {
-                    // Minificación segura de código eliminando comentarios/espacios (Preservando Strings)
+                    // Minificación segura conservando cadenas de texto
                     const regexCodigo = /(["'`])(?:(?=(\\?))\2.)*?\1|\/\*[\s\S]*?\*\/|\/\/.*$/gm;
                     
                     output = output.replace(regexCodigo, function(match, grupoCadena) {
@@ -430,7 +439,7 @@
                 }
 
             } catch (error) {
-                console.error("Error al procesar la optimización:", error);
+                console.error("Error procesando optimización:", error);
             } finally {
                 textoBtn.innerText = translations[idiomaActual].btnCompress;
                 document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
