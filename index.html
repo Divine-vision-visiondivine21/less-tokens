@@ -662,7 +662,14 @@ async function obtenerExtractor(claveModelo) {
     options.device = 'webgpu';
   }
   
-  extractores[cacheKey] = await pipeline('feature-extraction', MODELOS[claveModelo].id, options);
+  try {
+    extractores[cacheKey] = await pipeline('feature-extraction', MODELOS[claveModelo].id, options);
+  } catch (eLocal) {
+    console.warn("No se encontró el modelo en la CDN personalizada, intentando CDN remoto de respaldo:", eLocal);
+    if (typeof window.transformers !== 'undefined') window.transformers.env.allowLocalModels = false;
+    extractores[cacheKey] = await pipeline('feature-extraction', MODELOS[claveModelo].id, options);
+    if (typeof window.transformers !== 'undefined') window.transformers.env.allowLocalModels = true;
+  }
   return extractores[cacheKey];
 }
 
