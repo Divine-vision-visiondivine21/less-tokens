@@ -288,28 +288,26 @@ const translations = {
    ========================================================================= */
 
 const RELLENO = [
-  // Greetings
-  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*/i, ''],
+  // 1. Saludos y preguntas de cortesía al inicio
+  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*(\b¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va)\b\??[\s,.!¡]*)?/i, ''],
+  [/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]|te\s+encuentras)\??[\s,.!¡]*/i, ''],
   
-  // Politeness & courtesy
+  // 2. Deseos de buen día / charla informal
+  [/espero\s+que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(bien|de\s+maravilla|teniendo\s+un\s+(excelente|buen)\s+d[íi]a)[^.,;!?]*[.,;!?]?\s*/gi, ''],
+  
+  // 3. Fórmulas de cortesía para pedir cosas
   [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
   [/\b(y\s+)?si\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
   [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
   
-  // Thanks & closings
-  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,\s]*/gi, ''],
-  [/\bpor\s+tu\s+respuesta\b[.,\s]*/gi, ''],
-  [/\bespero\s+que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)[^.,;]*[.,;]?\s*/gi, ''],
-  [/\bte\s+(lo\s+)?agradecer[ií]a\s+(mucho\s+)?(si|que)\b\s*/gi, ''],
-  
-  // Filler starters
-  [/^\s*(podr[íi]as|puedes)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b/i, 'explicame'],
-  
-  // Redundant transitions
-  [/\bcomo\s+(ya\s+)?(sabes|sabr[áa]s|es\s+de\s+tu\s+conocimiento)\b[,\s]*/gi, ''],
-  [/\bcabe\s+(destacar|mencionar|se[ñn]alar|resaltar)\s+que\b\s*/gi, ''],
-  [/\bes\s+importante\s+(destacar|mencionar|se[ñn]alar|notar)\s+que\b\s*/gi, ''],
-  [/\ben\s+mi\s+(humilde\s+)?opini[óo]n\b[,\s]*/gi, '']
+  // 4. Agradecimientos y cierres pesados al final
+  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta)?\b[.,!¡\s]*/gi, ''],
+  [/\b(por\s+tu\s+(ayuda|respuesta)[.,!¡\s]*)?te\s+(lo\s+)?agradecer[ií]a\s+(mucho|much[íi]simo)?\b[.,!¡\s]*/gi, ''],
+  [/\bpor\s+tu\s+(ayuda|respuesta)\b[.,!¡\s]*/gi, ''],
+
+  // 5. Reducción de verbos de cortesía a imperativo directo
+  [/\bser[íi]as?\s+(tan\s+)?amable\s+de\s+escribir\b/gi, 'escribe'],
+  [/\bde\s+escribir\b/gi, 'escribe']
 ];
 
 const RE_NEGACION = /\b(no|not|never|nunca|jam[áa]s|sin|except|excepto|salvo|only|solo|s[óo]lo|[úu]nicamente|must|debe|deber[áa]s?|tienes que|siempre|always|required|obligatorio|prohibido|evita|avoid|don'?t|do not|aseg[úu]rate|ensure|make sure)\b/i;
