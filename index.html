@@ -437,6 +437,21 @@ function centroide(vs){
   return c;
 }
 
+function calcularSimilitudJaccard(s1, s2) {
+  const getBigramas = str => {
+    const s = str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+    const bg = new Set();
+    for (let i = 0; i < s.length - 1; i++) bg.add(s.slice(i, i + 2));
+    return bg;
+  };
+  const b1 = getBigramas(s1);
+  const b2 = getBigramas(s2);
+  if (!b1.size || !b2.size) return 0;
+  let intersec = 0;
+  for (const x of b1) if (b2.has(x)) intersec++;
+  return intersec / (b1.size + b2.size - intersec);
+}
+
 function calcularSimilitudInclusion(s1, s2) {
   // Extrae palabras significativas (> 3 letras, ignorando conectores comunes)
   const getPalabras = str => new Set(
