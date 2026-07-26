@@ -437,20 +437,28 @@ function centroide(vs){
   return c;
 }
 
-// Similitud sintáctica N-gramas (Jaccard)
-function calcularSimilitudJaccard(s1, s2) {
-  const getBigramas = str => {
-    const s = str.toLowerCase().replace(/[^\w]/g, '');
-    const bg = new Set();
-    for (let i = 0; i < s.length - 1; i++) bg.add(s.slice(i, i + 2));
-    return bg;
-  };
-  const b1 = getBigramas(s1);
-  const b2 = getBigramas(s2);
-  if (!b1.size || !b2.size) return 0;
-  let intersec = 0;
-  for (const x of b1) if (b2.has(x)) intersec++;
-  return intersec / (b1.size + b2.size - intersec);
+function calcularSimilitudInclusion(s1, s2) {
+  // Extrae palabras significativas (> 3 letras, ignorando conectores comunes)
+  const getPalabras = str => new Set(
+    str.toLowerCase()
+       .replace(/[^\p{L}\p{N}\s]/gu, '')
+       .split(/\s+/)
+       .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'para', 'hacer', 'usar', 'mediante'].includes(w))
+  );
+
+  const p1 = getPalabras(s1);
+  const p2 = getPalabras(s2);
+  
+  if (!p1.size || !p2.size) return 0;
+
+  // Contamos cuántas palabras de p2 (la frase nueva) ya estaban en p1
+  let coincidencia = 0;
+  for (const w of p2) {
+    if (p1.has(w)) coincidencia++;
+  }
+
+  // Retorna el porcentaje de cobertura de la oración 2 respecto a la 1
+  return coincidencia / p2.size;
 }
 
 function seleccionarOraciones(unidades, vectores, opts){
@@ -774,15 +782,16 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Deduplicación SINTÁCTICA RÁPIDA (Jaccard) sin depender del modelo si hay repeticiones
+  // Deduplicación SINTÁCTICA & CONTENIDO RÁPIDO
   for (let i = 0; i < unidades.length; i++) {
     for (let j = 0; j < i; j++) {
       if (!unidades[j].mantener) continue;
       
       const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
+      const simInclusion = calcularSimilitudInclusion(unidades[j].texto, unidades[i].texto);
       
-      // Si la oración es un duplicado idéntico/muy similar (>60% sintáctico)
-      if (simSintactica >= 0.60) {
+      // Si la similitud sintáctica es alta (> 0.55) O la nueva oración es una paráfrasis que repite en > 65% las palabras de una anterior
+      if (simSintactica >= 0.55 || simInclusion >= 0.65) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
         eliminados.push({ texto: unidades[i].texto, motivo: 'redundante' });
