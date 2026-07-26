@@ -122,6 +122,14 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   </button>
 </div>
 
+<!-- Presets de Ejemplo de 1 Clic -->
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; font-size: 0.85rem; color: #555;">
+  <span style="font-weight: 600;" data-i18n="lblEjemplos">Probar Ejemplo:</span>
+  <button onclick="cargarEjemplo('prompt')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exPrompt">Prompt Largo</button>
+  <button onclick="cargarEjemplo('codigo')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exCode">Código Python</button>
+  <button onclick="cargarEjemplo('json')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exJson">JSON Estructurado</button>
+</div>
+
 <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
 
 <div class="opciones" id="panelOpciones">
@@ -176,10 +184,16 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
     <span id="statDinero" style="color:#2e7d32">Coste evitado: $0.00</span>
   </div>
   <div class="box-resultado">
-    <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
-    </button>
+    <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 6px;">
+      <button class="btn-copiar" onclick="copiarTextoXml()" id="btnCopiarXml" title="Copiar en formato envoltorio XML para Claude / ChatGPT" style="background:#0b3d91;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span id="txtBtnCopiarXml" data-i18n="btnCopyXml">Copiar XML</span>
+      </button>
+      <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar" style="position:static;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
+      </button>
+    </div>
     <div id="txtResultado"></div>
   </div>
   <details class="detalles" id="detalles" style="display:none">
@@ -1201,6 +1215,27 @@ function copiarTexto(){
   navigator.clipboard.writeText($('txtResultado').innerText).then(()=>{
     $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
   });
+}
+
+function copiarTextoXml(){
+  const t = $('txtResultado').innerText;
+  const xml = `<instructions>\n${t}\n</instructions>`;
+  navigator.clipboard.writeText(xml).then(()=>{
+    $('btnCopiarXml').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>¡XML Copiado!</span>`;
+  });
+}
+
+function cargarEjemplo(tipo){
+  if(tipo==='prompt'){
+    cambiarPestana('texto', document.querySelectorAll('.tab-btn')[0]);
+    $('txtOriginal').value = `Hola IA, muy buenos días. ¿Cómo estás hoy? Espero que te encuentres excelente. Te escribo por este medio porque me gustaría pedirte de la manera más atenta si podrías hacer el gran favor de redactar un correo profesional para solicitar unas vacaciones. Necesito tu valiosa ayuda ya que quiero tomarme 5 días hábiles a partir del 10 de agosto. Muchas gracias de antemano por tu respuesta y tu tiempo, quedo muy atento. ¡Que tengas un bendecido día!`;
+  }else if(tipo==='codigo'){
+    cambiarPestana('codigo', document.querySelectorAll('.tab-btn')[1]);
+    $('txtOriginal').value = `# Función para calcular el área de un círculo\n# Autor: Equipo de desarrollo\ndef calcular_area(radio):\n    """Calcula el área usando la fórmula estándar Math.pi * r^2"""\n    import math\n    # Validamos que el radio sea positivo\n    if radio <= 0:\n        return 0 # Retorno por defecto\n    \n    resultado = math.pi * (radio ** 2)\n    return resultado # Devolvemos el resultado final`;
+  }else if(tipo==='json'){
+    cambiarPestana('json', document.querySelectorAll('.tab-btn')[2]);
+    $('txtOriginal').value = `{\n  "usuario": "Jorge",\n  "rol": "Desarrollador",\n  "permisos": [\n    "read",\n    "write",\n    "execute"\n  ],\n  "configuracion": {\n    "notificaciones": true,\n    "tema": "oscuro"\n  }\n}`;
+  }
 }
 
 actualizarHint();
