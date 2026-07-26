@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="pageTitle">Reductor de Tokens & Compilador IA - RFJ Software</title>
-<meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Optimiza tus peticiones con WebGPU, SLM y algoritmos estilo DSPy / Ax 100% local en tu navegador.">
+<title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
+<meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens de forma segura y 100% local en tu navegador.">
 <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
@@ -43,7 +43,7 @@ textarea:focus{border-color:var(--primary);outline:none}
 .niveles button{border:none;background:#fff;padding:6px 14px;cursor:pointer;font-size:.85rem;font-weight:600;color:#555;border-right:1px solid #ddd}
 .niveles button:last-child{border-right:none}
 .niveles button.active{background:var(--primary);color:#fff}
-.opciones select,.opciones input[type=number], .opciones input[type=text]{padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;font-family:inherit}
+.opciones select,.opciones input[type=number]{padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;font-family:inherit}
 .opciones input[type=number]{width:80px}
 .hint{font-size:.8rem;color:#777;flex-basis:100%;margin:0}
 
@@ -75,15 +75,6 @@ details.detalles ul{margin:10px 0 0;padding-left:20px;color:#666}
 details.detalles li{margin-bottom:6px}
 details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;letter-spacing:.04em}
 
-/* Tabla Dataset DSPy */
-.dspy-section { display: none; }
-.dataset-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .88rem; }
-.dataset-table th, .dataset-table td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
-.dataset-table th { background: var(--bg); color: #555; }
-.dataset-table input { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-.btn-add-row { background: none; border: 1px dashed var(--primary); color: var(--primary); padding: 6px 12px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 8px; font-weight: bold; }
-.btn-add-row:hover { background: #f0f4f8; }
-
 .seo-section{margin-top:60px;border-top:1px solid #eee;padding-top:30px}
 .seo-section h2{color:#222;font-size:1.5rem;margin-bottom:20px}
 .faq-item{margin-bottom:20px}
@@ -111,17 +102,13 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   </a>
 </div>
 
-<h1 data-i18n="h1">Reductor de Tokens & Compilador IA</h1>
+<h1 data-i18n="h1">Reductor de Tokens Inteligente</h1>
 <p class="sub" data-i18n="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
 
 <div class="tabs">
   <button class="tab-btn active" onclick="cambiarPestana('texto',this)">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     <span data-i18n="tabText">Texto / Prompts</span>
-  </button>
-  <button class="tab-btn" onclick="cambiarPestana('dspy',this)">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-    <span data-i18n="tabDspy">Compilador DSPy / Ax</span>
   </button>
   <button class="tab-btn" onclick="cambiarPestana('codigo',this)">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -133,60 +120,10 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   </button>
 </div>
 
-<!-- MODO TEXTO / PROMPTS -->
-<div id="seccionTexto">
-  <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
-</div>
-
-<!-- MODO COMPILADOR DSPY / AX -->
-<div id="seccionDspy" class="dspy-section">
-  <div style="background:var(--bg);border:1px solid #e9ecef;border-radius:8px;padding:15px;margin-bottom:15px;">
-    <h3 style="color:var(--primary);margin-bottom:8px;font-size:1.05rem;">Configuración de Firma (Task Signature)</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
-      <div style="flex:2;min-width:240px;">
-        <label style="font-weight:600;font-size:.85rem;">Meta de la Tarea (Task Goal):</label>
-        <input type="text" id="inpTaskGoal" value="Clasificar el sentimiento del texto en 'positivo' o 'negativo'.">
-      </div>
-      <div style="flex:1;min-width:120px;">
-        <label style="font-weight:600;font-size:.85rem;">Input Key:</label>
-        <input type="text" id="inpInputKey" value="text">
-      </div>
-      <div style="flex:1;min-width:120px;">
-        <label style="font-weight:600;font-size:.85rem;">Output Key:</label>
-        <input type="text" id="inpOutputKey" value="sentiment">
-      </div>
-    </div>
-  </div>
-
-  <div style="background:var(--bg);border:1px solid #e9ecef;border-radius:8px;padding:15px;margin-bottom:15px;">
-    <h3 style="color:var(--primary);margin-bottom:8px;font-size:1.05rem;">Dataset de Evaluación (Golden Pair Instances)</h3>
-    <table class="dataset-table" id="tablaDataset">
-      <thead>
-        <tr>
-          <th>Input</th>
-          <th>Golden Output</th>
-          <th style="width:30px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><input type="text" value="¡El servicio fue increíble y súper rápido!"></td>
-          <td><input type="text" value="positivo"></td>
-          <td><button onclick="eliminarFila(this)" style="background:none;border:none;color:#dc3545;cursor:pointer;">✕</button></td>
-        </tr>
-        <tr>
-          <td><input type="text" value="Odio perder el tiempo esperando en la fila."></td>
-          <td><input type="text" value="negativo"></td>
-          <td><button onclick="eliminarFila(this)" style="background:none;border:none;color:#dc3545;cursor:pointer;">✕</button></td>
-        </tr>
-      </tbody>
-    </table>
-    <button class="btn-add-row" onclick="agregarFila()">+ Añadir Ejemplo al Dataset</button>
-  </div>
-</div>
+<textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
 
 <div class="opciones" id="panelOpciones">
-  <span id="wrapNivel">
+  <span>
     <label data-i18n="lblNivel">Nivel:</label>
     <span class="niveles" id="selNivel">
       <button data-nivel="seguro" data-i18n="nivSeguro">Seguro</button>
@@ -197,21 +134,21 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="qwen" selected>Qwen 0.5B Chat (IA Generativa SLM) · ~350 MB</option>
-      <option value="multi">Multilingüe (Embeddings) · ~110 MB</option>
+      <option value="multi" selected>Multilingüe (Equilibrado) · ~110 MB</option>
       <option value="mpnet_multi">MPNet Multilingüe (Alta Precisión ES) · ~430 MB</option>
       <option value="rapido">Rápido (Inglés) · ~23 MB</option>
+      <option value="bge_small">BGE Small (Inglés) · ~67 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
-    <input type="checkbox" id="chkWebGPU" checked style="cursor:pointer;">
+    <input type="checkbox" id="chkWebGPU" style="cursor:pointer;">
     <label for="chkWebGPU" style="cursor:pointer;" data-i18n="lblWebGPU">Aceleración WebGPU</label>
   </span>
-  <span id="wrapPrecio">
+  <span>
     <label for="inpPrecio" data-i18n="lblPrecio">USD / 1M tokens:</label>
     <input type="number" id="inpPrecio" value="3" min="0" step="0.25">
   </span>
-  <p class="hint" id="hintNivel" data-i18n="hintEquilibrado">Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes detectadas por IA. Las instrucciones, cifras, negaciones y formatos se conservan siempre.</p>
+  <p class="hint" id="hintNivel" data-i18n="hintEquilibrado">Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes detectadas por embeddings. Las instrucciones, cifras, negaciones y formatos se conservan siempre.</p>
 </div>
 
 <div id="alertaCalidad" class="alerta-calidad"></div>
@@ -253,10 +190,10 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
 
 <section class="seo-section">
   <h2 data-i18n="faqTitle">Preguntas Frecuentes sobre la Reducción de Tokens</h2>
-  <div class="faq-item"><h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3><p data-i18n="faq1A">Combina limpieza de formato, modelos de lenguaje generativos locales (SLM Qwen 0.5B con WebGPU) y algoritmos de optimización de pocos ejemplos (DSPy / Ax) ejecutados 100% en tu navegador.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3><p data-i18n="faq1A">Combina tres capas: limpieza sin pérdida de espacios y formato, eliminación de fórmulas de cortesía, y detección de frases redundantes mediante embeddings vectoriales (Transformers.js) ejecutados en tu navegador.</p></div>
   <div class="faq-item"><h3 data-i18n="faq2Q">¿La IA seguirá entendiendo mi mensaje comprimido?</h3><p data-i18n="faq2A">Sí. El motor protege siempre las instrucciones, negaciones, cifras, nombres propios, formatos de salida y bloques de código: solo elimina relleno y repeticiones.</p></div>
-  <div class="faq-item"><h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial aquí?</h3><p data-i18n="faq3A">Sí. Toda la lógica se ejecuta en el cliente con JavaScript, WebAssembly y WebGPU. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.</p></div>
-  <div class="faq-item"><h3 data-i18n="faq4Q">¿Cuánto puedo ahorrar realmente?</h3><p data-i18n="faq4A">Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. Medimos con el tokenizador oficial de la familia GPT.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial aquí?</h3><p data-i18n="faq3A">Sí. Toda la lógica se ejecuta en el cliente con JavaScript y WebAssembly. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq4Q">¿Cuánto puedo ahorrar realmente?</h3><p data-i18n="faq4A">Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. La herramienta mide tokens con el tokenizador real, no con estimaciones optimistas.</p></div>
 </section>
 
 <footer class="footer-branding">
@@ -273,102 +210,349 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
    ========================================================================= */
 const translations = {
   es: {
-    pageTitle:"Reductor de Tokens & Compilador IA - RFJ Software",
-    h1:"Reductor de Tokens & Compilador IA",
+    pageTitle:"Reductor de Tokens IA - RFJ Software",
+    h1:"Reductor de Tokens Inteligente",
     sub:"Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.",
-    tabText:"Texto / Prompts", tabDspy:"Compilador DSPy / Ax", tabCode:"Código Fuente", tabJson:"JSON / Datos",
+    tabText:"Texto / Prompts", tabCode:"Código Fuente", tabJson:"JSON / Datos",
     placeholderText:"Pega un prompt largo, una conversación de chat o un artículo académico...",
     placeholderCode:"Pega tu código Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios sobrantes sin romper la sintaxis...",
     placeholderJson:"Pega estructuras JSON, JSONL o XML para minificarlas...",
     lblNivel:"Nivel:", nivSeguro:"Seguro", nivEquilibrado:"Equilibrado", nivAgresivo:"Agresivo",
     lblModelo:"Modelo:", lblPrecio:"USD / 1M tokens:", lblWebGPU:"Aceleración WebGPU",
     hintSeguro:"Seguro: sin pérdida. Solo normaliza espacios, sangrías y saltos de línea. No se descarga ningún modelo.",
-    hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes mediante IA. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
-    hintAgresivo:"Agresivo: recorta y sintetiza agresivamente manteniendo el significado principal.",
+    hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases casi duplicadas detectadas por solapamiento léxico. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
+    hintAgresivo:"Agresivo: además recorta hasta ~55% del texto de prosa priorizando por relevancia (MMR). Revisa el resultado antes de usarlo.",
     btnCompress:"Comprimir Contexto Gratis",
-    btnCompile:"Compilar Prompt con DSPy/Ax",
     btnDownloading:"Cargando IA local",
     btnTokenizer:"Cargando tokenizador",
-    btnAnalyzing:"Analizando vectores / IA Generativa",
-    privacyTag:"Procesamiento Local: el texto que pegas se procesa en tu navegador y nunca se envía a ningún servidor.",
+    btnAnalyzing:"Analizando vectores semánticos",
+    privacyTag:"Procesamiento Local: el texto que pegas se procesa en tu navegador y nunca se envía a ningún servidor (la página sí carga recursos públicos —modelo de IA y captcha— desde CDNs externos).",
     btnCopy:"Copiar Resultado", btnCopied:"¡Copiado!",
     verEliminado:"Ver qué se eliminó",
     faqTitle:"Preguntas Frecuentes sobre la Reducción de Tokens",
     faq1Q:"¿Cómo funciona este reductor de tokens online?",
-    faq1A:"Combina limpieza de formato, modelos de lenguaje generativos locales (SLM Qwen 0.5B con WebGPU) y algoritmos de optimización de pocos ejemplos (DSPy / Ax) ejecutados 100% en tu navegador.",
+    faq1A:"Combina tres capas: limpieza sin pérdida de espacios y formato, eliminación de fórmulas de cortesía, y detección de frases redundantes mediante embeddings vectoriales (Transformers.js) ejecutados en tu navegador.",
     faq2Q:"¿La IA seguirá entendiendo mi mensaje comprimido?",
     faq2A:"Sí. El motor protege siempre las instrucciones, negaciones, cifras, nombres propios, formatos de salida y bloques de código: solo elimina relleno y repeticiones.",
     faq3Q:"¿Es seguro pegar código confidencial aquí?",
-    faq3A:"Sí. Toda la lógica se ejecuta en el cliente con JavaScript, WebAssembly y WebGPU. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.",
+    faq3A:"Sí. Toda la lógica se ejecuta en el cliente con JavaScript y WebAssembly. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.",
     faq4Q:"¿Cuánto puedo ahorrar realmente?",
-    faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado.",
+    faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. Medimos con un tokenizador real de la familia GPT; para Claude y Gemini el número es una aproximación cercana, ya que cada proveedor usa su propio tokenizador interno no público. Cuando no se usa el tokenizador real (nivel Seguro, o si falla la carga) lo indicamos junto a la cifra.",
     footerPrefix:"Una herramienta desarrollada por ",
     footerGithub:"Código abierto: danos una estrella en GitHub",
     alertShortTitle:"Texto corto",
     alertShortDesc:"Con menos de 10 palabras el análisis semántico no aporta nada; se aplicó la limpieza estándar.",
     alertJsonInvalid:"El contenido no es JSON válido. Se aplicó únicamente limpieza de líneas para no corromper los datos.",
-    alertNoGain:"Este contenido ya estaba optimizado. Se devuelve prácticamente igual.",
+    alertNoGain:"Este contenido ya estaba optimizado: comprimirlo más dañaría el significado. Se devuelve prácticamente igual.",
     alertModelo:"Error al cargar el modelo. Se aplicó la limpieza sin pérdida.",
     aproxLabel:"aprox.",
-    alertTurnstileFail:"No se pudo cargar la verificación anti-bot (Turnstile). Puedes seguir usando la herramienta.",
+    alertTurnstileFail:"No se pudo cargar la verificación anti-bot (Turnstile). Puedes seguir usando la herramienta, pero esta sesión no quedó verificada.",
     statSavePrefix:"Ahorro: ", moneySavedPrefix:"Coste evitado: ~$",
     tokensLabel:"Tokens", motivoRedundante:"redundante", motivoCortesia:"cortesía / relleno", motivoPresupuesto:"fuera de presupuesto"
   },
   en: {
-    pageTitle:"AI Token Reducer & Compiler - RFJ Software",
-    h1:"Smart Token Reducer & AI Compiler",
+    pageTitle:"AI Token Reducer - RFJ Software",
+    h1:"Smart Token Reducer",
     sub:"Optimize your requests for ChatGPT, Claude and Gemini without losing context.",
-    tabText:"Text / Prompts", tabDspy:"DSPy / Ax Compiler", tabCode:"Source Code", tabJson:"JSON / Data",
+    tabText:"Text / Prompts", tabCode:"Source Code", tabJson:"JSON / Data",
     placeholderText:"Paste a long prompt, a chat conversation or an academic article...",
-    placeholderCode:"Paste your Java, JavaScript, Python code, etc. Comments and extra whitespace are removed...",
+    placeholderCode:"Paste your Java, JavaScript, Python code, etc. Comments and extra whitespace are removed without breaking syntax...",
     placeholderJson:"Paste JSON, JSONL or XML structures to minify them...",
     lblNivel:"Level:", nivSeguro:"Safe", nivEquilibrado:"Balanced", nivAgresivo:"Aggressive",
     lblModelo:"Model:", lblPrecio:"USD / 1M tokens:", lblWebGPU:"WebGPU Acceleration",
-    hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks.",
-    hintEquilibrado:"Balanced: lossless cleanup + removes politeness and redundant sentences via AI.",
-    hintAgresivo:"Aggressive: aggressively trims prose maintaining core intent.",
+    hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks. No model download.",
+    hintEquilibrado:"Balanced: lossless cleanup + removes politeness and near-duplicate sentences detected via lexical overlap. Instructions, numbers, negations and output formats are always kept.",
+    hintAgresivo:"Aggressive: additionally trims prose down to ~55% by relevance ranking (MMR). Review the output before using it.",
     btnCompress:"Compress Context for Free",
-    btnCompile:"Compile Prompt with DSPy/Ax",
     btnDownloading:"Loading local AI",
     btnTokenizer:"Loading tokenizer",
-    btnAnalyzing:"Analyzing vectors / Generative AI",
-    privacyTag:"Local Processing: the text you paste is processed in your browser and never sent to any server.",
+    btnAnalyzing:"Analyzing semantic vectors",
+    privacyTag:"Local Processing: the text you paste is processed in your browser and never sent to any server (the page itself does load public assets —the AI model and the captcha— from external CDNs).",
     btnCopy:"Copy Result", btnCopied:"Copied!",
     verEliminado:"See what was removed",
     faqTitle:"Frequently Asked Questions about Token Reduction",
     faq1Q:"How does this online token reducer work?",
-    faq1A:"Combines formatting cleanup, local generative SLMs (Qwen 0.5B with WebGPU) and few-shot prompt compilation algorithms.",
+    faq1A:"Three layers: lossless whitespace and formatting cleanup, removal of politeness formulas, and redundant-sentence detection using vector embeddings (Transformers.js) running in your browser.",
     faq2Q:"Will the AI still understand my compressed message?",
-    faq2A:"Yes. The engine always protects instructions, negations, numbers, proper nouns, output formats and code blocks.",
+    faq2A:"Yes. The engine always protects instructions, negations, numbers, proper nouns, output formats and code blocks: it only removes filler and repetition.",
     faq3Q:"Is it safe to paste confidential code here?",
-    faq3A:"Yes. All logic runs client-side with JavaScript, WebAssembly and WebGPU.",
+    faq3A:"Yes. All logic runs client-side with JavaScript and WebAssembly. The model is downloaded once and cached by the browser; your data is never sent anywhere.",
     faq4Q:"How much can I actually save?",
-    faq4A:"It depends on the content. Indented JSON and commented code compress a lot.",
+    faq4A:"It depends on the content. Indented JSON and commented code compress a lot; well-written prompts compress moderately. We measure with a real GPT-family tokenizer; for Claude and Gemini the number is a close approximation, since each provider uses its own non-public internal tokenizer. Whenever the real tokenizer isn't used (Safe level, or if loading fails), we flag it next to the figure.",
     footerPrefix:"A tool developed by ",
     footerGithub:"Open source: star us on GitHub",
     alertShortTitle:"Short text",
-    alertShortDesc:"Under 10 words semantic analysis adds nothing.",
-    alertJsonInvalid:"The content is not valid JSON.",
-    alertNoGain:"This content was already optimized.",
+    alertShortDesc:"Under 10 words semantic analysis adds nothing; standard cleanup was applied.",
+    alertJsonInvalid:"The content is not valid JSON. Only line cleanup was applied so your data is not corrupted.",
+    alertNoGain:"This content was already optimized: compressing further would damage meaning. Returned nearly unchanged.",
     alertModelo:"Model failed to load. Lossless cleanup was applied instead.",
     aproxLabel:"approx.",
-    alertTurnstileFail:"Anti-bot verification (Turnstile) could not be loaded.",
+    alertTurnstileFail:"Anti-bot verification (Turnstile) could not be loaded. You can still use the tool, but this session was not verified.",
     statSavePrefix:"Savings: ", moneySavedPrefix:"Cost avoided: ~$",
     tokensLabel:"Tokens", motivoRedundante:"redundant", motivoCortesia:"politeness / filler", motivoPresupuesto:"over budget"
   }
 };
 
 /* =========================================================================
-   2. TRANSFORMERS.JS GLOBAL PIPELINE CACHE
+   2. MOTOR (Versión Completa y Corregida)
+   ========================================================================= */
+
+function esOracionDeCortesía(texto) {
+  if (!texto) return false;
+  const t = texto.toLowerCase().trim();
+  if (/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b/i.test(t)) return true;
+  if (/^\s*(querido|estimado|apreciado)?\s*(modelo|asistente|chatgpt|ia|ai|sistema)\s*(de\s+inteligencia\s+artificial)?\b/i.test(t)) return true;
+  if (/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b/i.test(t)) return true;
+  if (/espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un)/i.test(t)) return true;
+  if (/^(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?/i.test(t)) return true;
+  if (/^(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)?.*(favor|molestia|inconveniente|ayudarme|ayuda)/i.test(t)) return true;
+  if (/^si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)/i.test(t)) return true;
+  if (/^¿?podr[íi]as\s+(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?(ayudarme|ayudar|asistirme)/i.test(t)) return true;
+  if (/^(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?/i.test(t)) return true;
+  if (/^quedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta/i.test(t)) return true;
+  if (/^¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?/i.test(t)) return true;
+  return false;
+}
+
+const RELLENO = [
+  // 1. Saludos, vocativos y preguntas de cortesía al inicio
+  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*(\b(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)\b[\s,.!¡]*)?(\b¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b\??[\s,.!¡]*)?/i, ''],
+  [/^\s*(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)\s*(de\s+inteligencia\s+artificial)?[\s,.!¡]*/i, ''],
+  [/^\s*de\s+inteligencia\s+artificial[\s,.!¡]*/i, ''],
+  [/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]|te\s+encuentras)\??[\s,.!¡]*/i, ''],
+  
+  // 2. Deseos de buen día / charla informal
+  [/espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un\s+(excelente|buen|bendecido)\s+d[íi]a)[^.,;!?]*[.,;!?]?\s*/gi, ''],
+  
+  // 3. Rodeos de apertura y charlar por este medio
+  [/^\s*(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?\s*/gi, ''],
+  [/\b(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)\s+(de\s+la\s+manera\s+m[áa]s\s+atenta\s+)?(si\s+podr[íi]as?|si\s+ser[íi]as?|si\s+fueras?)?\s*(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?/gi, ''],
+  [/\bhacer\s+el\s+(gran\s+)?favor\s+de\s+/gi, ''],
+  [/\b(y\s+)?si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)(\s+para\s+ti|\s+para\s+usted)?\b[,\s]*/gi, ''],
+  [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
+  [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
+  [/\b(necesito|requiero)\s+(tu\s+)?(valiosa\s+|gran\s+)?(ayuda|asistencia)[.,!¡\s]*/gi, ''],
+
+  // 4. Ruido situacional e intros irrelevantes
+  [/\bresulta\s+que\s+(estoy\s+trabajando\s+en\s+mi\s+computadora\s+en\s+mi\s+oficina\s+y\s+)?/gi, ''],
+  [/\bquiero\s+recalcar\s+y\s+volver\s+a\s+repetir\s+que\s+/gi, ''],
+  [/\bes\s+decir,\s+tu\s+trabajo\s+y\s+tu\s+funci[óo]n\s+principal\s+en\s+este\s+momento\s+va\s+a\s+ser\s+/gi, ''],
+  [/\blo\s+que\s+necesito\s+exactamente\s+es\s+que\s+/gi, ''],
+  
+  // 5. Agradecimientos y cierres pesados al final
+  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?\b[.,!¡\s]*/gi, ''],
+  [/\bquedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta[.,!¡\s]*/gi, ''],
+  [/\b¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?[.,!¡\s]*/gi, ''],
+  [/\b(por\s+tu\s+(ayuda|respuesta)[.,!¡\s]*)?te\s+(lo\s+)?agradecer[ií]a\s+(mucho|much[íi]simo)?\b[.,!¡\s]*/gi, ''],
+  [/\bpor\s+tu\s+(ayuda|respuesta)\b[.,!¡\s]*/gi, '']
+];
+
+const RE_NEGACION = /\b(no|not|never|nunca|jam[áa]s|sin|except|excepto|salvo|only|solo|s[óo]lo|[úu]nicamente|must|debe|deber[áa]s?|tienes que|siempre|always|required|obligatorio|prohibido|evita|avoid|don'?t|do not|aseg[úu]rate|ensure|make sure)\b/i;
+const RE_FORMATO = /\b(json|xml|yaml|csv|markdown|tabla|table|formato|format|schema|esquema|output|salida|responde|respond|devuelve|return|idioma|language)\b/i;
+const RE_ROL = /\b(eres|act[úu]a|actuar|comp[óo]rtate|you are|act as|behave as|rol|role|tarea|task|objetivo|goal|contexto|context|experto|expert|especialista|specialist|asistente|assistant|tu trabajo|your job)\b/i;
+const RE_ESTRUCTURAL = /^\s*(#{1,6}\s|[-*+•·–]\s|\d+[.)]\s|\|.*\||>\s|\[[^\]]+\]|<[^>]+>|[A-Za-zÁÉÍÓÚÑáéíóúñ0-9_ -]{1,40}:\s*\S)/;
+
+function sanearRuidoYExcesos(texto) {
+  if (!texto) return '';
+  return texto
+    .replace(/([^0-9])\1{3,}/gi, '$1$1$1')
+    .replace(/([aeiouáéíóú])\1{2,}/gi, '$1')
+    .replace(/[ \t]+/g, ' ');
+}
+
+function esProtegida(txt){
+  if(!txt) return false;
+  if(/\d/.test(txt)) return true; 
+  if(/[`{}[\]<>|\\/_=+]/.test(txt)) return true; 
+  if(/https?:\/\/|\w+\.\w{2,4}\//.test(txt)) return true; 
+  if(/\b[A-ZÁÉÍÓÚÑ]{2,}\b/.test(txt)) return true; 
+  if(/\b[a-z]+[A-Z]\w*|\b\w+_\w+/.test(txt)) return true; 
+  if(RE_NEGACION.test(txt)) return true;
+  if(RE_FORMATO.test(txt)) return true;
+  return false;
+}
+
+function normalizarEspacios(t){
+  let limpio = sanearRuidoYExcesos(t);
+  return limpio
+          .replace(/\s+([,.;:!?)\]])/g,'$1')
+          .replace(/([(\[¿¡])\s+/g,'$1')
+          .replace(/ ?\n ?/g,'\n')
+          .replace(/\n{3,}/g,'\n\n')
+          .trim();
+}
+
+function quitarRelleno(t){
+  let r = t;
+  
+  // 1. Aplica reglas del diccionario RELLENO
+  for(const [re,rep] of RELLENO) r = r.replace(re,rep);
+  
+  // 2. Limpieza de cortesías y rodeos adicionales
+  r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
+       .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)(\s+para\s+ti|\s+para\s+usted)?\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
+       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+tiempo)?\b[.,;!]*/gi, '')
+       .replace(/\bpor\s+tu\s+(respuesta|ayuda)\b[.,;!]*/gi, '')
+       .replace(/\bnecesito\s+tu\s+valiosa\s+ayuda[.,;!]*/gi, '')
+       .replace(/\bquedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta[.,;!]*/gi, '');
+
+  // 3. Normalización y limpieza de espacios
+  r = r.replace(/^[\s,;:.-]+/, '')
+       .replace(/\s{2,}/g, ' ')
+       .replace(/\s+([,.;:!?])/g, '$1')
+       .trim();
+
+  // Limpiar signos de apertura huérfanos al inicio
+  r = r.replace(/^[¿¡\s,;:.-]+/, '');
+
+  if (!r) return '';
+
+  // 4. Solo añade '¿' SI la oración es una pregunta legítima que termina en '?' y no empieza con '¿'
+  const esPreguntaInterrogativa = /^\s*(¿|c[óo]mo|qu[eé]|cu[áa]n|d[óo]nde|cu[áa]ndo|por\s*qu[eé]|qui[eé]n|cu[áa]l|podr[íi]as|ser[íi]as|te\s+gustar[íi]a|puedes|debo)/i.test(r);
+
+  if (/\?$/.test(r) && esPreguntaInterrogativa && !/^¿/.test(r)) {
+    r = '¿' + r;
+  }
+
+  // Quita signos de apertura huérfanos si la oración no es una pregunta
+  if (!/\?$/.test(r)) {
+    r = r.replace(/^¿\s*/, '');
+  }
+
+  // Capitaliza la primera letra
+  return r.charAt(0).toUpperCase() + r.slice(1);
+}
+
+function limpiarLineaEstructural(linea){
+  const m = linea.match(/^(\s*(?:#{1,6}\s|[-*+•·–]\s|\d+[.)]\s|>\s)?)([\s\S]*)$/);
+  const pref = m ? m[1] : ''; 
+  const cuerpo = m ? m[2] : linea;
+  const limpio = quitarRelleno(cuerpo);
+  return limpio ? (pref + limpio) : '';
+}
+
+function segmentar(texto){
+  const lineas = texto.replace(/\r\n?/g, '\n').split('\n');
+  const bloques = []; 
+  let enFence = false, buffer = [];
+  const volcar = () => { 
+    if(buffer.length){ 
+      bloques.push({tipo: 'prosa', texto: buffer.join(' ').replace(/\s+/g, ' ').trim()}); 
+      buffer = []; 
+    } 
+  };
+  for(const linea of lineas){
+    if(/^\s*```/.test(linea)){ volcar(); enFence = !enFence; bloques.push({tipo: 'literal', texto: linea.trim()}); continue; }
+    if(enFence){ bloques.push({tipo: 'literal', texto: linea}); continue; }
+    if(!linea.trim()){ volcar(); bloques.push({tipo: 'vacio'}); continue; }
+    if(RE_ESTRUCTURAL.test(linea)){ volcar(); bloques.push({tipo: 'estructura', texto: linea.replace(/\s+$/, '')}); continue; }
+    buffer.push(linea.trim());
+  }
+  volcar();
+  return bloques;
+}
+
+function dividirOraciones(texto, idioma){
+  if(typeof Intl !== 'undefined' && Intl.Segmenter){
+    try{
+      const seg = new Intl.Segmenter(idioma || 'es', {granularity: 'sentence'});
+      return [...seg.segment(texto)].map(s => s.segment.trim()).filter(Boolean);
+    }catch(e){}
+  }
+  return texto.split(/(?<=[.?!…])\s+/).map(s => s.trim()).filter(Boolean);
+}
+
+function coseno(a, b){
+  let dot = 0, na = 0, nb = 0;
+  for(let i = 0; i < a.length; i++){ dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  const d = Math.sqrt(na) * Math.sqrt(nb);
+  return d === 0 ? 0 : dot / d;
+}
+
+function centroide(vs){
+  const dim = vs[0].length, c = new Float64Array(dim);
+  for(const v of vs) for(let i = 0; i < dim; i++) c[i] += v[i];
+  for(let i = 0; i < dim; i++) c[i] /= vs.length;
+  return c;
+}
+
+function seleccionarOraciones(unidades, vectores, opts){
+  const { ratioObjetivo } = opts;
+  const n = unidades.length;
+  if(n <= 1) return unidades.map((_, i) => i);
+
+  const centro = centroide(vectores);
+  const relevancia = vectores.map(v => coseno(centro, v));
+  const vivos = unidades.map((_, i) => i);
+
+  if(!ratioObjetivo) return vivos;
+
+  // En modo Agresivo, solo protegemos estrictamente el Rol (oración 0/rol) y las Negaciones/Prohibiciones explícitas
+  const esCritica = (u) => {
+    const txt = u.texto.toLowerCase();
+    return RE_ROL.test(txt) || /\b(no|never|nunca|jam[áa]s|prohibido|don'?t|do not)\b/i.test(txt);
+  };
+
+  const obligatorias = vivos.filter(i => esCritica(unidades[i]) || i === 0);
+  const setObl = new Set(obligatorias);
+  const pendientes = vivos.filter(i => !setObl.has(i));
+  const elegidos = new Set(obligatorias);
+  
+  let totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
+  let objetivo = totalChars * ratioObjetivo;
+  // `usados` debe representar los caracteres actualmente conservados (obligatorias +
+  // pendientes), no solo los de las obligatorias: si arranca solo con las obligatorias
+  // casi siempre queda por debajo de "objetivo" y el bucle nunca se ejecuta, por lo que
+  // el modo Agresivo no recortaba nada pese a anunciar ~55%. Además hay que restar el
+  // tamaño de cada oración eliminada para que el bucle converja hacia el ratio real.
+  let usados = totalChars;
+
+  // Selección MMR sobre oraciones secundarias
+  while(pendientes.length && usados > objetivo){
+    // Seleccionamos la menos relevante para remover
+    let peor = -1, peorScore = Infinity;
+    for(const i of pendientes){
+      let maxSim = 0;
+      for(const j of elegidos) {
+        maxSim = Math.max(maxSim, coseno(vectores[i], vectores[j]));
+      }
+      const score = 0.60 * relevancia[i] - 0.40 * maxSim;
+      if(score < peorScore){ peorScore = score; peor = i; }
+    }
+    if (peor === -1) break;
+
+    usados -= unidades[peor].texto.length;
+    unidades[peor].motivo = 'presupuesto';
+    pendientes.splice(pendientes.indexOf(peor), 1);
+  }
+  
+  // Guardamos las oraciones que sobrevivieron al recorte de presupuesto
+  const seleccionadas = new Set([...elegidos, ...pendientes]);
+  
+  unidades.forEach((u, idx) => {
+    if (!seleccionadas.has(idx)) {
+      u.mantener = false;
+      u.motivo = 'presupuesto';
+    }
+  });
+
+  return [...seleccionadas].sort((a, b) => a - b);
+}
+
+/* =========================================================================
+   3. TRANSFORMERS.JS (Carga Global Segura)
    ========================================================================= */
 const MODELOS = {
-  qwen: { id: 'Xenova/Qwen1.5-0.5B-Chat', tipo: 'generativo' },
-  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', tipo: 'embedding' },
-  mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2', tipo: 'embedding' },
-  rapido: { id: 'Xenova/all-MiniLM-L6-v2', tipo: 'embedding' }
+  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
+  mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2' },
+  rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
+  bge_small: { id: 'Xenova/bge-small-en-v1.5' }
 };
+const LOTE = 16;
 
-let extractores = {}, generadores = {}, tokenizer = undefined;
+let extractores = {}, tokenizer = undefined;
 
 async function cargarLib() {
   if (typeof window.transformers !== 'undefined') {
@@ -382,33 +566,8 @@ async function cargarLib() {
   throw new Error("No se pudo acceder a Transformers.js");
 }
 
-async function obtenerGenerador(claveModelo) {
-  const usarWebGPU = $('chkWebGPU') && $('chkWebGPU').checked;
-  const cacheKey = claveModelo + (usarWebGPU ? '_webgpu' : '_cpu');
-  if (generadores[cacheKey]) return generadores[cacheKey];
-  const { pipeline } = await cargarLib();
-  const T = translations[idiomaActual];
-  
-  const options = {
-    progress_callback: d => {
-      if (d.status === 'progress' || d.status === 'downloading') {
-        const pct = d.progress ? Math.round(d.progress) : 0;
-        setEstado(`${T.btnDownloading} ${pct}%`, pct);
-      } else if (d.status === 'ready') { 
-        setEstado(T.btnAnalyzing, 100); 
-      }
-    }
-  };
-  if (usarWebGPU) {
-    options.device = 'webgpu';
-  }
-  
-  generadores[cacheKey] = await pipeline('text-generation', MODELOS[claveModelo].id, options);
-  return generadores[cacheKey];
-}
-
 async function obtenerExtractor(claveModelo) {
-  const usarWebGPU = $('chkWebGPU') && $('chkWebGPU').checked;
+  const usarWebGPU = document.getElementById('chkWebGPU') && document.getElementById('chkWebGPU').checked;
   const cacheKey = claveModelo + (usarWebGPU ? '_webgpu' : '_cpu');
   if (extractores[cacheKey]) return extractores[cacheKey];
   const { pipeline } = await cargarLib();
@@ -439,83 +598,308 @@ async function obtenerTokenizer() {
     setEstado(translations[idiomaActual].btnTokenizer, null);
     tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt-4');
   } catch (e) { 
+    console.warn('Tokenizador no disponible, usando estimador:', e); 
     tokenizer = null; 
   }
   return tokenizer;
 }
 
-/* =========================================================================
-   3. FUNCIONES DE LIMPIEZA LÉXICA & CÓDIGO
-   ========================================================================= */
-function esOracionDeCortesía(texto) {
-  if (!texto) return false;
-  const t = texto.toLowerCase().trim();
-  if (/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b/i.test(t)) return true;
-  if (/^\s*(querido|estimado|apreciado)?\s*(modelo|asistente|chatgpt|ia|ai|sistema)\s*(de\s+inteligencia\s+artificial)?\b/i.test(t)) return true;
-  if (/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b/i.test(t)) return true;
-  if (/espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un)/i.test(t)) return true;
-  if (/^(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?/i.test(t)) return true;
-  if (/^(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)?.*(favor|molestia|inconveniente|ayudarme|ayuda)/i.test(t)) return true;
-  if (/^si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)/i.test(t)) return true;
-  if (/^¿?podr[íi]as\s+(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?(ayudarme|ayudar|asistirme)/i.test(t)) return true;
-  if (/^(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?/i.test(t)) return true;
-  if (/^quedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta/i.test(t)) return true;
-  if (/^¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?/i.test(t)) return true;
-  return false;
+async function embeder(textos,extractor){
+  const vecs=[];
+  for(let i=0;i<textos.length;i+=LOTE){
+    const lote=textos.slice(i,i+LOTE);
+    const t=await extractor(lote,{pooling:'mean',normalize:true});
+    const dim=t.dims[t.dims.length-1];
+    for(let k=0;k<lote.length;k++) vecs.push(Array.from(t.data.slice(k*dim,(k+1)*dim)));
+    setEstado(`${translations[idiomaActual].btnAnalyzing} (${Math.min(i+LOTE,textos.length)}/${textos.length})`,
+              Math.round(Math.min(i+LOTE,textos.length)/textos.length*100));
+  }
+  return vecs;
 }
 
-function normalizarEspacios(t){
-  return t.replace(/\s+([,.;:!?)\]])/g,'$1')
-          .replace(/([(\[¿¡])\s+/g,'$1')
-          .replace(/ ?\n ?/g,'\n')
-          .replace(/\n{3,}/g,'\n\n')
-          .trim();
+/* =========================================================================
+   4. PIPELINE Y CÓDIGO
+   ========================================================================= */
+const PERFILES={
+  seguro:      {relleno:false, semantico:false, umbralDuplicado:1,    ratioObjetivo:0},
+  equilibrado: {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0},
+  agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.80, ratioObjetivo:0.55}
+};
+
+function detectarLenguaje(src){
+  const s = src.slice(0, 4000);
+  if (/^\s*<(!doctype|html|\?xml|[a-z]+[\s>])/i.test(src.trim())) return 'html';
+  if (/^\s*(def |class |import |from\s+\S+\s+import|@\w+\s*$|if __name__)/m.test(s) && !/[;{]\s*$/m.test(s)) return 'python';
+  if (/^\s*(#|--|;)/m.test(s) && !/[{};]/.test(s)) return 'hash';
+  return 'clike';
+}
+
+function limpiarCLike(src){
+  let out = '', i = 0, prev = '', prevSig = '';
+  const n = src.length;
+  const emitir = c => { out += c; prev = c; if(!/\s/.test(c)) prevSig = c; };
+
+  while(i < n){
+    const c = src[i], c2 = src[i+1];
+    if(c === '/' && c2 === '/'){ while(i < n && src[i] !== '\n') i++; continue; }
+    if(c === '/' && c2 === '*'){ i += 2; while(i < n && !(src[i] === '*' && src[i+1] === '/')) i++; i += 2; continue; }
+
+    if(c === '"' || c === "'" || c === '`'){
+      const q = c; emitir(c); i++;
+      while(i < n){
+        if(src[i] === '\\'){ out += src[i] + (src[i+1] || ''); i += 2; continue; }
+        const ch = src[i]; out += ch; i++;
+        if(ch === q) break;
+      }
+      prev = q; prevSig = q; continue;
+    }
+
+    if(c === ' ' || c === '\t'){
+      let j = i; while(j < n && (src[j] === ' ' || src[j] === '\t')) j++;
+      if(prev === '\n' || prev === ''){ i = j; continue; }
+      if(j >= n || src[j] === '\n' || src[j] === '\r'){ i = j; continue; }
+      out += ' '; prev = ' '; i = j; continue;
+    }
+
+    if(c === '\n' || c === '\r'){
+      let j = i; while(j < n && /[\r\n \t]/.test(src[j])) j++;
+      if(out && prev !== '\n'){ out += '\n'; prev = '\n'; }
+      i = j; continue;
+    }
+
+    emitir(c); i++;
+  }
+  return out.split('\n').map(l => l.replace(/[ \t]+$/, '')).filter(l => l.length).join('\n').trim();
+}
+
+function limpiarPython(src){
+  const lineas = src.replace(/\r\n?/g, '\n').split('\n');
+  const res = []; let triple = null;
+  for(const raw of lineas){
+    if(triple){ res.push(raw.replace(/\s+$/, '')); if(raw.includes(triple)) triple = null; continue; }
+    let out = '', i = 0, q = null;
+    const linea = raw.replace(/\s+$/, '');
+    while(i < linea.length){
+      const c = linea[i];
+      if(q){ if(c === '\\'){ out += c + (linea[i+1] || ''); i += 2; continue; } out += c; if(c === q) q = null; i++; continue; }
+      if(c === '#') break;
+      if(c === '"' || c === "'"){
+        const tri = linea.substr(i, 3);
+        if(tri === '"""' || tri === "'''"){
+          const resto = linea.slice(i + 3), idx = resto.indexOf(tri);
+          if(idx >= 0){ out += tri + resto.slice(0, idx + 3); i += 3 + idx + 3; }
+          else { out += tri + resto; i = linea.length; triple = tri; }
+          continue;
+        }
+        q = c; out += c; i++; continue;
+      }
+      out += c; i++;
+    }
+    out = out.replace(/\s+$/, '');
+    if(!out.trim()) continue;
+    res.push(out);
+  }
+  return res.join('\n').trim();
+}
+
+function limpiarHash(src){
+  return src.replace(/\r\n?/g, '\n').split('\n')
+    .map(l => l.replace(/(^|\s)(#|--|;;?)\s.*$/, '').replace(/\s+$/, ''))
+    .filter(l => l.trim()).join('\n').trim();
+}
+
+function limpiarHtml(src){
+  return src.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\r\n?/g, '\n').split('\n').map(l => l.trim()).filter(Boolean).join('\n').trim();
 }
 
 function comprimirCodigo(src){
-  const lineas = src.replace(/\r\n?/g, '\n').split('\n');
-  const res = lineas.map(l => l.replace(/(^|\s)(#|\/\/|--)\s.*$/, '').replace(/\s+$/, '')).filter(l => l.trim());
-  return { texto: res.join('\n').trim(), lenguaje: 'code' };
+  const lang = detectarLenguaje(src);
+  let out;
+  if(lang === 'python') out = limpiarPython(src);
+  else if(lang === 'html') out = limpiarHtml(src);
+  else if(lang === 'hash') out = limpiarHash(src);
+  else out = limpiarCLike(src);
+  return { texto: out, lenguaje: lang };
 }
 
 function comprimirJson(src){
   const t = src.trim();
   try { return { texto: JSON.stringify(JSON.parse(t)), nota: 'json' }; } catch(e){}
-  return { texto: t.split('\n').map(l => l.trim()).filter(Boolean).join('\n'), nota: 'raw' };
+  const lineas = t.split('\n').map(l => l.trim()).filter(Boolean);
+  if(lineas.length > 1){
+    try { return { texto: lineas.map(l => JSON.stringify(JSON.parse(l))).join('\n'), nota: 'jsonl' }; } catch(e){}
+  }
+  if(/^\s*<[?a-zA-Z]/.test(t)){
+    return { texto: t.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+</g, '><').trim(), nota: 'xml' };
+  }
+  return { texto: t.split('\n').map(l => l.replace(/\s+$/,'')).filter(l => l.trim()).join('\n'), nota: 'invalido' };
+}
+
+async function comprimirTexto(input, nivel) {
+  const cfg = PERFILES[nivel];
+  const eliminados = [];
+  const textoLimpio = normalizarEspacios(input);
+  const bloques = segmentar(textoLimpio);
+
+  // 1. Segmentación infalible por Regex de oraciones
+  for (const b of bloques) {
+    if (b.tipo !== 'prosa') continue;
+    let oracionesTexto = b.texto.split(/(?<=[.?!…])\s+/).map(s => s.trim()).filter(Boolean);
+    b.oraciones = oracionesTexto.map(o => ({
+      texto: o,
+      protegida: esProtegida(o),
+      mantener: true,
+      motivo: ''
+    }));
+  }
+
+  // 2. Capa 1: Relleno y Cortesía
+  if (cfg.relleno) {
+    for (const b of bloques) {
+      if (b.tipo === 'estructura') {
+        const antes = b.texto;
+        b.texto = limpiarLineaEstructural(b.texto);
+        if (!b.texto) eliminados.push({ texto: antes, motivo: 'cortesia' });
+      } else if (b.tipo === 'prosa') {
+        for (const o of b.oraciones) {
+          const antes = o.texto;
+          if (esOracionDeCortesía(o.texto)) {
+            o.mantener = false;
+            eliminados.push({ texto: antes, motivo: 'cortesia' });
+            continue;
+          }
+          let limpio = quitarRelleno(o.texto);
+          const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
+          if (!limpio || (!o.protegida && palabrasReales.length < 2)) {
+            o.mantener = false;
+            eliminados.push({ texto: antes, motivo: 'cortesia' });
+          } else {
+            o.texto = limpio;
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Capa 2: Deduplicación por Acumulado de Contenido Visto
+  const unidades = [];
+  for (const b of bloques) {
+    if (b.tipo !== 'prosa') continue;
+    for (const o of b.oraciones) {
+      if (o.mantener) unidades.push(o);
+    }
+  }
+
+  const palabrasVistas = new Set();
+  const stopWords = new Set(['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante', 'asegurate', 'emplear', 'debes', 'revisa', 'revises', 'uses', 'enviar']);
+  // El umbral de duplicado por nivel viene de PERFILES (antes estaba hardcodeado a 0.40
+  // e ignoraba cfg.umbralDuplicado, por lo que "Seguro" perdía contenido pese a
+  // anunciarse como sin pérdida). umbralDuplicado=1 en "seguro" anula la deduplicación.
+  const umbralNovedad = 1 - cfg.umbralDuplicado;
+
+  for (let i = 0; i < unidades.length; i++) {
+    const textoActual = unidades[i].texto;
+    const palabrasClave = textoActual.toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !stopWords.has(w));
+
+    if (palabrasClave.length > 0) {
+      let repetidas = 0;
+      for (const p of palabrasClave) {
+        if (palabrasVistas.has(p)) repetidas++;
+      }
+
+      const ratioNovedad = (palabrasClave.length - repetidas) / palabrasClave.length;
+
+      if (i > 0 && ratioNovedad < umbralNovedad) {
+        unidades[i].mantener = false;
+        unidades[i].motivo = 'redundante';
+        eliminados.push({ texto: textoActual, motivo: 'redundante' });
+        continue;
+      }
+    }
+
+    for (const p of palabrasClave) {
+      palabrasVistas.add(p);
+    }
+  }
+
+  // 4. Capa Vectorial (Deduplicación Semántica por Coseno + MMR)
+  let avisoModelo = false;
+  const supervivientes = unidades.filter(u => u.mantener);
+
+  if (cfg.semantico && supervivientes.length >= 2) {
+    try {
+      const extractor = await obtenerExtractor(document.getElementById('selModelo').value);
+      const vecs = await embeder(supervivientes.map(u => u.texto), extractor);
+      
+      // Deduplicación semántica por similitud de coseno por pares
+      const mantenidos = [];
+      const vecsMantenidos = [];
+
+      for (let i = 0; i < supervivientes.length; i++) {
+        const u = supervivientes[i];
+        const v = vecs[i];
+        let esDuplicado = false;
+
+        for (let j = 0; j < vecsMantenidos.length; j++) {
+          const sim = coseno(v, vecsMantenidos[j]);
+          if (sim >= cfg.umbralDuplicado) {
+            esDuplicado = true;
+            u.mantener = false;
+            u.motivo = 'redundante';
+            eliminados.push({ texto: u.texto, motivo: 'redundante' });
+            break;
+          }
+        }
+
+        if (!esDuplicado) {
+          mantenidos.push(u);
+          vecsMantenidos.push(v);
+        }
+      }
+
+      // Recorte MMR para presupuestos (modo Agresivo)
+      if (cfg.ratioObjetivo > 0 && mantenidos.length >= 2) {
+        const idxElegidos = new Set(seleccionarOraciones(mantenidos, vecsMantenidos, cfg));
+        mantenidos.forEach((u, i) => {
+          if (!idxElegidos.has(i)) {
+            u.mantener = false;
+            eliminados.push({ texto: u.texto, motivo: u.motivo === 'presupuesto' ? 'presupuesto' : 'redundante' });
+          }
+        });
+      }
+
+    } catch (e) {
+      console.error('Fallo del modelo:', e);
+      avisoModelo = true;
+    }
+  }
+
+  // 5. Reconstrucción Final
+  const salida = [];
+  for (const b of bloques) {
+    if (b.tipo === 'vacio') {
+      if (salida.length && salida[salida.length - 1] !== '') salida.push('');
+      continue;
+    }
+    if (b.tipo === 'literal') { salida.push(b.texto); continue; }
+    if (b.tipo === 'estructura') { if (b.texto.trim()) salida.push(b.texto); continue; }
+    if (b.tipo === 'prosa') {
+      const txt = b.oraciones.filter(o => o.mantener).map(o => o.texto).join(' ').trim();
+      if (txt) salida.push(txt);
+    }
+  }
+
+  let out = salida.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!out) out = normalizarEspacios(input);
+  return { texto: out, eliminados, avisoModelo };
 }
 
 /* =========================================================================
-   4. DSPY DATASET & COMPILADOR HELPERS
-   ========================================================================= */
-function agregarFila() {
-  const tbody = $('tablaDataset').querySelector('tbody');
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input type="text" placeholder="Entrada..."></td>
-    <td><input type="text" placeholder="Salida esperada..."></td>
-    <td><button onclick="eliminarFila(this)" style="background:none;border:none;color:#dc3545;cursor:pointer;">✕</button></td>
-  `;
-  tbody.appendChild(tr);
-}
-
-function eliminarFila(btn) { btn.closest('tr').remove(); }
-
-function obtenerDataset() {
-  const rows = [...$('tablaDataset').querySelectorAll('tbody tr')];
-  const inputKey = $('inpInputKey').value.trim() || 'text';
-  const outputKey = $('inpOutputKey').value.trim() || 'sentiment';
-
-  return rows.map(r => {
-    const inputs = r.querySelectorAll('input');
-    return {
-      [inputKey]: inputs[0].value.trim(),
-      [outputKey]: inputs[1].value.trim()
-    };
-  }).filter(item => item[inputKey] && item[outputKey]);
-}
-
-/* =========================================================================
-   5. UI & NAVEGACIÓN DE PESTAÑAS
+   5. UI
    ========================================================================= */
 let modoActual='texto', nivelActual='equilibrado', idiomaActual='es', tokenValidacion='';
 
@@ -548,13 +932,11 @@ function cambiarIdioma(lang){
   });
   actualizarPlaceholder();
   actualizarHint();
-  if(!$('btnPrincipal').classList.contains('cargando')) {
-    $('textoBtn').innerText = modoActual === 'dspy' ? translations[lang].btnCompile : translations[lang].btnCompress;
-  }
+  if(!$('btnPrincipal').classList.contains('cargando')) $('textoBtn').innerText=translations[lang].btnCompress;
 }
 
 function actualizarPlaceholder(){
-  const p={texto:'placeholderText',dspy:'placeholderText',codigo:'placeholderCode',json:'placeholderJson'}[modoActual];
+  const p={texto:'placeholderText',codigo:'placeholderCode',json:'placeholderJson'}[modoActual];
   $('txtOriginal').placeholder=translations[idiomaActual][p];
 }
 
@@ -568,17 +950,11 @@ function cambiarPestana(modo,boton){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   boton.classList.add('active');
   $('alertaCalidad').style.display='none';
-  
-  $('seccionTexto').style.display = (modo === 'texto' || modo === 'codigo' || modo === 'json') ? 'block' : 'none';
-  $('seccionDspy').style.display = (modo === 'dspy') ? 'block' : 'none';
-  
-  const soloTexto = (modo === 'texto' || modo === 'dspy');
-  $('wrapNivel').style.display = (modo === 'texto') ? '' : 'none';
-  $('wrapModelo').style.display = soloTexto ? '' : 'none';
-  $('wrapWebGPU').style.display = soloTexto ? '' : 'none';
-  $('hintNivel').style.display = (modo === 'texto') ? '' : 'none';
-  
-  $('textoBtn').innerText = modo === 'dspy' ? translations[idiomaActual].btnCompile : translations[idiomaActual].btnCompress;
+  const soloTexto=modo==='texto';
+  $('selNivel').parentElement.style.display=soloTexto?'':'none';
+  $('wrapModelo').style.display=soloTexto?'':'none';
+  $('wrapWebGPU').style.display=soloTexto?'':'none';
+  $('hintNivel').style.display=soloTexto?'':'none';
   actualizarPlaceholder();
 }
 
@@ -591,129 +967,120 @@ $('selNivel').addEventListener('click',e=>{
 
 function turnstileCompletado(token){ tokenValidacion=token; $('btnPrincipal').disabled=false; }
 function turnstileExpirado(){ tokenValidacion=''; $('btnPrincipal').disabled=true; }
-
+// Si Turnstile no carga (bloqueadores, red, CDN caído) no dejamos el botón inutilizable
+// para siempre, pero tampoco lo desbloqueamos en silencio: se avisa explícitamente.
+// Nota: este token nunca se valida contra un servidor en este archivo (no hay backend
+// aquí), por lo que el captcha ya era solo un gate de UI, no una protección real.
 setTimeout(()=>{
   if(typeof turnstile==='undefined'){
     $('btnPrincipal').disabled=false;
+    mostrarAlerta('advertencia', translations[idiomaActual].alertTurnstileFail);
   }
-},3000);
+},6000);
 
 function estimarTokens(texto) {
   if (!texto || !texto.trim()) return 0;
+  // Heurística SIN descargas (se usa cuando no hay tokenizador real cargado):
+  // contar solo palabras subestima mucho en JSON/código compacto, donde casi no
+  // hay espacios que separen "palabras" (ej. un array minificado puede ser una
+  // sola "palabra" larga). Se combina con la regla estándar de ~4 caracteres
+  // por token y se toma la señal más alta para no subestimar el conteo.
   const palabras = texto.trim().split(/\s+/).length;
-  return Math.max(1, Math.ceil(palabras * 1.35));
+  const porPalabras = palabras * 1.35;
+  const porCaracteres = texto.length / 4;
+  return Math.max(1, Math.ceil(Math.max(porPalabras, porCaracteres)));
 }
 
 function contarTokens(t) {
-  if (tokenizer) { try { return tokenizer.encode(t).length; } catch(e){} }
+  if (tokenizer) { 
+    try { return tokenizer.encode(t).length; } catch(e){} 
+  }
   return estimarTokens(t);
 }
 
-/* =========================================================================
-   6. EJECUCIÓN PRINCIPAL
-   ========================================================================= */
 async function procesarOptimizacion(){
+  const input=$('txtOriginal').value;
   const btn=$('btnPrincipal');
   const T=translations[idiomaActual];
   $('alertaCalidad').style.display='none';
   $('detalles').style.display='none';
+  if(!input.trim()) return;
 
   btn.disabled=true; btn.classList.add('cargando');
-  let output='', eliminados=[], nota='';
+  let output=input, eliminados=[], nota='';
 
   try{
-    await obtenerTokenizer();
+    // El nivel "Seguro" promete explícitamente "no se descarga ningún modelo": antes
+    // esta llamada se hacía siempre, sin importar nivel ni modo, contradiciendo esa
+    // promesa (y descargando el tokenizer de forma innecesaria para una limpieza
+    // puramente léxica). Ahora solo se descarga cuando realmente aporta precisión.
+    const evitarDescargaTokenizer = (modoActual==='texto' && nivelActual==='seguro');
+    if(!evitarDescargaTokenizer){
+      await obtenerTokenizer();
+    }
     const usandoTokenizerReal = !!tokenizer;
+    const tokensAntes=contarTokens(input);
 
-    if (modoActual === 'dspy') {
-      const dataset = obtenerDataset();
-      if (!dataset.length) throw new Error("Añade al menos un ejemplo al dataset de evaluación.");
-
-      const taskGoal = $('inpTaskGoal').value.trim();
-      const inputKey = $('inpInputKey').value.trim();
-      const outputKey = $('inpOutputKey').value.trim();
-
-      const generator = await obtenerGenerador($('selModelo').value);
-      setEstado(T.btnAnalyzing, 50);
-
-      const fewShot = dataset.map(d => `${inputKey}: ${d[inputKey]} -> ${outputKey}: ${d[outputKey]}`).join('\n');
-      const promptFormatted = `<|im_start|>system\nTask: ${taskGoal}\nDevuelve únicamente la respuesta concisa final.\n${fewShot}<|im_end|>\n<|im_start|>user\nCompiler optimization check.<|im_end|>\n<|im_start|>assistant\n`;
-
-      const resGen = await generator(promptFormatted, { max_new_tokens: 256, temperature: 0.1 });
-      let compiledText = resGen[0].generated_text || '';
-      if (compiledText.includes('<|im_start|>assistant\n')) {
-        compiledText = compiledText.split('<|im_start|>assistant\n').pop();
+    if(modoActual==='texto'){
+      const palabras=input.trim().split(/\s+/).length;
+      let nivel=nivelActual;
+      
+      if(palabras < 10){
+        mostrarAlerta('advertencia',`<strong>${T.alertShortTitle} (${palabras}):</strong><br>${T.alertShortDesc}`);
       }
-      compiledText = compiledText.replace(/<\|im_end\|>/g, '').trim();
-
-      output = `// PROMPT COMPILADO DE PRODUCCIÓN (DSPY / AX STYLE)
-System: Task: ${taskGoal}. Responde directo e imperativo.
-
-// FEW-SHOT EXEMPLARS SELECCIONADOS
-${fewShot}
-
-// FIRMA DE EJECUCIÓN
-${inputKey} -> ${outputKey}`;
-
-    } else if(modoActual==='texto'){
-      const input=$('txtOriginal').value;
-      if(!input.trim()) return;
-
-      const claveMod = $('selModelo').value;
-      const modeloInfo = MODELOS[claveMod] || MODELOS.qwen;
-
-      if (modeloInfo.tipo === 'generativo') {
-        setEstado(T.btnAnalyzing, 50);
-        const generator = await obtenerGenerador(claveMod);
-        const systemInstruction = `Actúa como un compresor de prompts experto. Tu única tarea es recibir un prompt largo y devolverlo extremadamente limpio, directo y conciso. Elimina saludos, cortesías, rodeos, agradecimientos y explicaciones innecesarias. Mantén intactas todas las instrucciones técnicas, formatos de salida, restricciones y requerimientos. Responde ÚNICAMENTE con el prompt optimizado final.`;
-        
-        const promptFormatted = `<|im_start|>system\n${systemInstruction}<|im_end|>\n<|im_start|>user\n${input}<|im_end|>\n<|im_start|>assistant\n`;
-        
-        const resGen = await generator(promptFormatted, { max_new_tokens: 512, temperature: 0.1, do_sample: false });
-
-        let genText = resGen[0].generated_text || '';
-        if (genText.includes('<|im_start|>assistant\n')) {
-          genText = genText.split('<|im_start|>assistant\n').pop();
-        }
-        genText = genText.replace(/<\|im_end\|>/g, '').trim();
-        output = genText || input;
-      } else {
-        output = normalizarEspacios(input);
-      }
-    } else if(modoActual==='codigo'){
-      const input=$('txtOriginal').value;
+      const r=await comprimirTexto(input,nivel);
+      output=r.texto; eliminados=r.eliminados;
+      if(r.avisoModelo) mostrarAlerta('error',T.alertModelo);
+    }else if(modoActual==='codigo'){
       const r=comprimirCodigo(input);
       output=r.texto; nota=r.lenguaje;
-    } else {
-      const input=$('txtOriginal').value;
+    }else{
       const r=comprimirJson(input);
       output=r.texto;
+      if(r.nota==='invalido') mostrarAlerta('advertencia',T.alertJsonInvalid);
     }
 
-    const inputRef = modoActual === 'dspy' ? $('inpTaskGoal').value : $('txtOriginal').value;
-    const tokensAntes = contarTokens(inputRef || 'sample');
-    output = output.trim();
-    const tokensDespues = contarTokens(output);
-    let ahorro = tokensAntes > 0 ? Math.round((tokensAntes - tokensDespues) / tokensAntes * 100) : 0;
-    if (ahorro < 0) ahorro = 0;
+    output=output.trim();
+    const tokensDespues=contarTokens(output);
+    let ahorro=tokensAntes>0?Math.round((tokensAntes-tokensDespues)/tokensAntes*100):0;
+    if(ahorro<0) ahorro=0;
+    if(ahorro===0 && modoActual==='texto') mostrarAlerta('info',T.alertNoGain);
 
-    const precio = parseFloat($('inpPrecio').value) || 0;
-    const ahorrado = Math.max(0, tokensAntes - tokensDespues) * precio / 1e6;
+    const precio=parseFloat($('inpPrecio').value)||0;
+    const ahorrado=Math.max(0,tokensAntes-tokensDespues)*precio/1e6;
 
-    $('txtResultado').innerText = output;
-    $('statAhorro').innerText = `${T.statSavePrefix}${ahorro}%`;
-    $('statTokens').innerText = `${T.tokensLabel}: ${tokensAntes.toLocaleString()} ➔ ${tokensDespues.toLocaleString()}`;
-    $('statDinero').innerText = `${T.moneySavedPrefix}${ahorrado.toFixed(5)}`;
-    $('seccionResultado').style.display = 'block';
+    // Transparencia: si no se usó el tokenizador real (Seguro, o falló la carga),
+    // lo marcamos junto a la cifra en vez de presentarla como medición exacta.
+    const sufijosStats = [];
+    if (nota) sufijosStats.push(nota);
+    if (!usandoTokenizerReal) sufijosStats.push(T.aproxLabel);
+    const sufijoStats = sufijosStats.length ? ' · '+sufijosStats.join(' · ') : '';
 
-    $('btnCopiar').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
-  } catch(err) {
-    console.error('Error procesando:', err);
-    mostrarAlerta('error', String(err && err.message ? err.message : err));
-  } finally {
+    $('txtResultado').innerText=output;
+    $('statAhorro').innerText=`${T.statSavePrefix}${ahorro}%`;
+    $('statTokens').innerText=`${T.tokensLabel}: ${tokensAntes.toLocaleString()} ➔ ${tokensDespues.toLocaleString()}${sufijoStats}`;
+    $('statDinero').innerText=`${T.moneySavedPrefix}${ahorrado.toFixed(5)}`;
+    $('seccionResultado').style.display='block';
+
+    if(eliminados.length){
+      const motivos={redundante:T.motivoRedundante,cortesia:T.motivoCortesia,presupuesto:T.motivoPresupuesto};
+      $('listaEliminado').innerHTML=eliminados.map(e=>{
+        const t=e.texto.length>160?e.texto.slice(0,160)+'…':e.texto;
+        const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        return `<li>${esc}<br><span class="motivo">${motivos[e.motivo]||e.motivo}</span></li>`;
+      }).join('');
+      $('detalles').style.display='block';
+    }
+
+    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
+  }catch(err){
+    console.error('Error procesando:',err);
+    mostrarAlerta('error',String(err && err.message ? err.message : err));
+  }finally{
     btn.classList.remove('cargando');
-    setEstado(modoActual === 'dspy' ? T.btnCompile : T.btnCompress, null);
-    btn.disabled = false;
+    setEstado(T.btnCompress,null);
+    if(typeof turnstile!=='undefined'){ turnstile.reset(); btn.disabled=true; }
+    else btn.disabled=false;
   }
 }
 
