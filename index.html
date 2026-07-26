@@ -888,6 +888,21 @@ function turnstileCompletado(token){ tokenValidacion=token; $('btnPrincipal').di
 function turnstileExpirado(){ tokenValidacion=''; $('btnPrincipal').disabled=true; }
 setTimeout(()=>{ if(typeof turnstile==='undefined') $('btnPrincipal').disabled=false; },4000);
 
+function estimarTokens(texto) {
+  if (!texto) return 0;
+  const ascii = (texto.match(/[\x00-\x7F]/g) || []).length;
+  const noAscii = texto.length - ascii;
+  const cjk = (texto.match(/[ -鿿가-힯]/g) || []).length;
+  return Math.ceil(ascii / 3.9 + (noAscii - cjk) / 2.2 + cjk);
+}
+
+function contarTokens(t) {
+  if (tokenizer) { 
+    try { return tokenizer.encode(t).length; } catch(e){} 
+  }
+  return estimarTokens(t);
+}
+
 async function procesarOptimizacion(){
   const input=$('txtOriginal').value;
   const btn=$('btnPrincipal');
