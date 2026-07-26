@@ -1,485 +1,888 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
-    <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens hasta un 90% de forma segura y local en tu navegador.">
-    
-    <!-- Script de Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
+<meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens de forma segura y 100% local en tu navegador.">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+:root{
+  --primary:#001f5b; --primary-hover:#00143a; --success:#28a745;
+  --warning-bg:#fff3cd; --warning-text:#856404; --warning-border:#ffeeba;
+  --danger-bg:#f8d7da; --danger-text:#721c24; --danger-border:#f5c6cb;
+  --info-bg:#e7f1ff; --info-text:#0b3d91; --info-border:#c5dbff;
+  --bg:#f8f9fa; --text:#333;
+}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;max-width:840px;margin:0 auto;padding:20px;color:var(--text);line-height:1.6;background:#fff;position:relative}
+.lang-switch{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:8px}
+.github-link{color:#555;display:flex;align-items:center;transition:color .2s;margin-right:10px}
+.github-link:hover{color:var(--primary)}
+.footer-github{margin-top:10px;font-size:.9rem;color:#555;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px}
+.footer-github:hover{color:var(--primary);text-decoration:underline}
+.lang-btn{background:none;border:1px solid #ccc;padding:4px 10px;cursor:pointer;border-radius:4px;font-size:.85rem;font-weight:bold;color:#555;transition:.2s}
+.lang-btn:hover{background:#f0f0f0}
+.lang-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.logo-container{text-align:center;margin:30px 0 25px}
+.logo-container img{max-width:120px;height:auto;transition:transform .2s}
+.logo-container img:hover{transform:scale(1.02)}
+h1{color:var(--primary);text-align:center;margin-bottom:5px;font-size:2.2rem}
+.sub{text-align:center;color:#666;font-size:1.1rem;margin-bottom:25px}
+.tabs{display:flex;gap:10px;margin-bottom:15px;border-bottom:2px solid #ddd;padding-bottom:10px;flex-wrap:wrap}
+.tab-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:none;border:none;padding:10px 20px;font-size:1rem;font-weight:bold;cursor:pointer;color:#666;border-radius:6px;transition:.2s}
+.tab-btn.active{background:var(--primary);color:#fff}
+textarea{width:100%;height:190px;padding:15px;border:2px solid #ddd;border-radius:8px;font-size:1rem;resize:vertical;font-family:inherit}
+textarea:focus{border-color:var(--primary);outline:none}
 
-    <style>
-        :root { 
-            --primary: #001f5b; 
-            --primary-hover: #00143a; 
-            --success: #28a745; 
-            --warning-bg: #fff3cd;
-            --warning-text: #856404;
-            --warning-border: #ffeeba;
-            --danger-bg: #f8d7da;
-            --danger-text: #721c24;
-            --danger-border: #f5c6cb;
-            --bg: #f8f9fa; 
-            --text: #333; 
-        }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--text); line-height: 1.6; background-color: #fff; position: relative; }
-        
-        /* Selector de Idioma y GitHub */
-        .lang-switch { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; }
-        .github-link { color: #555; display: flex; align-items: center; transition: color 0.2s; margin-right: 10px; }
-        .github-link:hover { color: var(--primary); }
-        .footer-github { display: inline-block; margin-top: 10px; font-size: 0.9rem; color: #555; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .footer-github:hover { color: var(--primary); text-decoration: underline; }
-        .lang-btn { background: none; border: 1px solid #ccc; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #555; transition: 0.2s; }
-        .lang-btn:hover { background: #f0f0f0; }
-        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+/* Panel de opciones */
+.opciones{display:flex;flex-wrap:wrap;gap:18px;align-items:center;background:var(--bg);border:1px solid #e9ecef;border-radius:8px;padding:12px 15px;margin-top:12px;font-size:.9rem}
+.opciones label{font-weight:600;color:#444}
+.niveles{display:inline-flex;border:1px solid #ccc;border-radius:6px;overflow:hidden}
+.niveles button{border:none;background:#fff;padding:6px 14px;cursor:pointer;font-size:.85rem;font-weight:600;color:#555;border-right:1px solid #ddd}
+.niveles button:last-child{border-right:none}
+.niveles button.active{background:var(--primary);color:#fff}
+.opciones select,.opciones input[type=number]{padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;font-family:inherit}
+.opciones input[type=number]{width:80px}
+.hint{font-size:.8rem;color:#777;flex-basis:100%;margin:0}
 
-        .logo-container { text-align: center; margin-bottom: 25px; margin-top: 30px; }
-        .logo-container img { max-width: 120px; height: auto; transition: transform 0.2s ease; }
-        .logo-container img:hover { transform: scale(1.02); }
-        
-        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; font-size: 2.2rem; }
-        .sub { text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 25px; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .tab-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: none; border: none; padding: 10px 20px; font-size: 1rem; font-weight: bold; cursor: pointer; color: #666; border-radius: 6px; transition: 0.2s; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        
-        textarea { width: 100%; height: 180px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; resize: vertical; font-family: inherit; }
-        textarea:focus { border-color: var(--primary); outline: none; }
-        
-        .alerta-calidad { display: none; align-items: center; gap: 10px; padding: 12px 15px; border-radius: 6px; margin: 10px 0; font-size: 0.95rem; line-height: 1.4; }
-        .alerta-advertencia { background-color: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
-        .alerta-error { background-color: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
-        
-        .turnstile-container { display: flex; justify-content: center; margin: 15px 0; }
+.alerta-calidad{display:none;align-items:center;gap:10px;padding:12px 15px;border-radius:6px;margin:12px 0;font-size:.95rem;line-height:1.4}
+.alerta-advertencia{background:var(--warning-bg);color:var(--warning-text);border:1px solid var(--warning-border)}
+.alerta-error{background:var(--danger-bg);color:var(--danger-text);border:1px solid var(--danger-border)}
+.alerta-info{background:var(--info-bg);color:var(--info-text);border:1px solid var(--info-border)}
 
-        .btn-principal { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin: 15px 0; transition: background 0.2s; }
-        .btn-principal:hover:not(:disabled) { background: var(--primary-hover); }
-        .btn-principal:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.8; }
-        
-        .privacidad-tag { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: var(--success); font-weight: bold; margin-bottom: 25px; }
-        
-        .panel-stats { display: flex; flex-wrap: wrap; justify-content: space-between; background: #e2f0d9; border: 1px solid #b4c6e7; padding: 15px; border-radius: 6px; margin-top: 15px; font-weight: bold; }
-        .box-resultado { background: var(--bg); border: 1px solid #e9ecef; border-left: 5px solid var(--success); padding: 20px; border-radius: 6px; position: relative; margin-top: 15px; }
-        .btn-copiar { display: flex; align-items: center; gap: 6px; position: absolute; top: 10px; right: 10px; background: #6c757d; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; }
-        .btn-copiar:hover { background: #5a6268; }
-        #txtResultado { white-space: pre-wrap; font-family: monospace; font-size: 0.95rem; margin-top: 15px; max-height: 300px; overflow-y: auto; }
-        
-        .seo-section { margin-top: 60px; border-top: 1px solid #eee; padding-top: 30px; }
-        .seo-section h2 { color: #222; font-size: 1.5rem; margin-bottom: 20px; }
-        .faq-item { margin-bottom: 20px; }
-        .faq-item h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 5px; }
-        .faq-item p { margin: 0; color: #555; font-size: 0.95rem; }
+.turnstile-container{display:flex;justify-content:center;margin:15px 0}
+.btn-principal{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--primary);color:#fff;border:none;padding:14px;font-size:1.1rem;font-weight:bold;border-radius:6px;cursor:pointer;width:100%;margin:15px 0;transition:background .2s}
+.btn-principal:hover:not(:disabled){background:var(--primary-hover)}
+.btn-principal:disabled{background:#6c757d;cursor:not-allowed;opacity:.8}
+.btn-principal .ico-spinner{display:none}
+.btn-principal.cargando .ico-rayo{display:none}
+.btn-principal.cargando .ico-spinner{display:inline-block;animation:spin 1.2s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+.barra{height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;margin-top:-8px;display:none}
+.barra div{height:100%;width:0;background:var(--primary);transition:width .2s}
 
-        .footer-branding { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 0.95rem; color: #666; }
-        .footer-branding a { color: var(--primary); text-decoration: none; font-weight: bold; transition: color 0.2s; }
-        .footer-branding a:hover { color: var(--primary-hover); text-decoration: underline; }
-        
-        @media (max-width: 600px) {
-            .lang-switch { position: static; justify-content: center; margin-bottom: 20px; }
-            .logo-container { margin-top: 0; }
-        }
-    </style>
+.privacidad-tag{display:flex;align-items:center;justify-content:center;gap:6px;font-size:.85rem;color:var(--success);font-weight:bold;margin-bottom:25px;text-align:center}
+.panel-stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;background:#e2f0d9;border:1px solid #b4c6e7;padding:15px;border-radius:6px;margin-top:15px;font-weight:bold}
+.box-resultado{background:var(--bg);border:1px solid #e9ecef;border-left:5px solid var(--success);padding:20px;border-radius:6px;position:relative;margin-top:15px}
+.btn-copiar{display:flex;align-items:center;gap:6px;position:absolute;top:10px;right:10px;background:#6c757d;color:#fff;padding:6px 12px;font-size:.85rem;border-radius:4px;border:none;cursor:pointer}
+.btn-copiar:hover{background:#5a6268}
+#txtResultado{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92rem;margin-top:20px;max-height:340px;overflow:auto}
+details.detalles{margin-top:12px;font-size:.9rem}
+details.detalles summary{cursor:pointer;font-weight:600;color:var(--primary)}
+details.detalles ul{margin:10px 0 0;padding-left:20px;color:#666}
+details.detalles li{margin-bottom:6px}
+details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;letter-spacing:.04em}
+
+.seo-section{margin-top:60px;border-top:1px solid #eee;padding-top:30px}
+.seo-section h2{color:#222;font-size:1.5rem;margin-bottom:20px}
+.faq-item{margin-bottom:20px}
+.faq-item h3{font-size:1.1rem;color:var(--primary);margin-bottom:5px}
+.faq-item p{margin:0;color:#555;font-size:.95rem}
+.footer-branding{margin-top:40px;padding-top:20px;border-top:1px solid #eee;text-align:center;font-size:.95rem;color:#666}
+.footer-branding a{color:var(--primary);text-decoration:none;font-weight:bold}
+.footer-branding a:hover{color:var(--primary-hover);text-decoration:underline}
+@media(max-width:600px){.lang-switch{position:static;justify-content:center;margin-bottom:20px}.logo-container{margin-top:0}.panel-stats{flex-direction:column}}
+</style>
 </head>
 <body>
-    
-    <div class="lang-switch">
-        <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="github-link" title="Ver código en GitHub">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-        </a>
-        <button class="lang-btn active" onclick="cambiarIdioma('es')" id="btn-es">ES</button>
-        <button class="lang-btn" onclick="cambiarIdioma('en')" id="btn-en">EN</button>
-    </div>
 
-    <div class="logo-container">
-        <a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer" title="Visitar el sitio web de RFJ Software">
-            <img src="logo-rfj.png" alt="Logo RFJ Software">
-        </a>
-    </div>
+<div class="lang-switch">
+  <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="github-link" title="Ver código en GitHub">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+  </a>
+  <button class="lang-btn active" onclick="cambiarIdioma('es')" id="btn-es">ES</button>
+  <button class="lang-btn" onclick="cambiarIdioma('en')" id="btn-en">EN</button>
+</div>
 
-    <h1 data-i18n="h1">Reductor de Tokens Inteligente</h1>
-    <p class="sub" data-i18n="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
-    
-    <div class="tabs">
-        <button class="tab-btn active" onclick="cambiarPestana('texto', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span data-i18n="tabText">Texto / Prompts</span>
-        </button>
-        <button class="tab-btn" onclick="cambiarPestana('codigo', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            <span data-i18n="tabCode">Código Fuente</span>
-        </button>
-        <button class="tab-btn" onclick="cambiarPestana('json', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-            <span data-i18n="tabJson">JSON / Datos</span>
-        </button>
-    </div>
+<div class="logo-container">
+  <a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer" title="Visitar RFJ Software">
+    <img src="logo-rfj.png" alt="Logo RFJ Software">
+  </a>
+</div>
 
-    <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
-    
-    <div id="alertaCalidad" class="alerta-calidad"></div>
+<h1 data-i18n="h1">Reductor de Tokens Inteligente</h1>
+<p class="sub" data-i18n="sub">Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.</p>
 
-    <div class="turnstile-container">
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD9pktc-8Oh0WcOK" data-callback="turnstileCompletado" data-theme="light"></div>
-    </div>
+<div class="tabs">
+  <button class="tab-btn active" onclick="cambiarPestana('texto',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span data-i18n="tabText">Texto / Prompts</span>
+  </button>
+  <button class="tab-btn" onclick="cambiarPestana('codigo',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <span data-i18n="tabCode">Código Fuente</span>
+  </button>
+  <button class="tab-btn" onclick="cambiarPestana('json',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    <span data-i18n="tabJson">JSON / Datos</span>
+  </button>
+</div>
 
-    <button id="btnPrincipal" class="btn-principal" onclick="procesarOptimizacion()" disabled>
-        <svg id="iconoBtn" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span id="textoBtn" data-i18n="btnCompress">Comprimir Contexto Gratis</span>
+<textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
+
+<div class="opciones" id="panelOpciones">
+  <span>
+    <label data-i18n="lblNivel">Nivel:</label>
+    <span class="niveles" id="selNivel">
+      <button data-nivel="seguro" data-i18n="nivSeguro">Seguro</button>
+      <button data-nivel="equilibrado" class="active" data-i18n="nivEquilibrado">Equilibrado</button>
+      <button data-nivel="agresivo" data-i18n="nivAgresivo">Agresivo</button>
+    </span>
+  </span>
+  <span id="wrapModelo">
+    <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
+    <select id="selModelo">
+      <option value="multi" selected>Multilingüe · ~110 MB</option>
+      <option value="rapido">Rápido (EN) · ~23 MB</option>
+    </select>
+  </span>
+  <span>
+    <label for="inpPrecio" data-i18n="lblPrecio">USD / 1M tokens:</label>
+    <input type="number" id="inpPrecio" value="3" min="0" step="0.25">
+  </span>
+  <p class="hint" id="hintNivel" data-i18n="hintEquilibrado">Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes detectadas por embeddings. Las instrucciones, cifras, negaciones y formatos se conservan siempre.</p>
+</div>
+
+<div id="alertaCalidad" class="alerta-calidad"></div>
+
+<div class="turnstile-container">
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAAD9pktc-8Oh0WcOK" data-callback="turnstileCompletado" data-expired-callback="turnstileExpirado" data-error-callback="turnstileExpirado" data-theme="light"></div>
+</div>
+
+<button id="btnPrincipal" class="btn-principal" onclick="procesarOptimizacion()" disabled>
+  <svg class="ico-rayo" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  <svg class="ico-spinner" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+  <span id="textoBtn" data-i18n="btnCompress">Comprimir Contexto Gratis</span>
+</button>
+<div class="barra" id="barra"><div id="barraFill"></div></div>
+
+<p class="privacidad-tag">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <span data-i18n="privacyTag">Procesamiento Local: tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.</span>
+</p>
+
+<div id="seccionResultado" style="display:none">
+  <div class="panel-stats">
+    <span id="statAhorro">Ahorro: 0%</span>
+    <span id="statTokens">Tokens: 0 ➔ 0</span>
+    <span id="statDinero" style="color:#2e7d32">Coste evitado: $0.00</span>
+  </div>
+  <div class="box-resultado">
+    <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
     </button>
-    
-    <p class="privacidad-tag">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        <span data-i18n="privacyTag">Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.</span>
-    </p>
+    <div id="txtResultado"></div>
+  </div>
+  <details class="detalles" id="detalles" style="display:none">
+    <summary data-i18n="verEliminado">Ver qué se eliminó</summary>
+    <ul id="listaEliminado"></ul>
+  </details>
+</div>
 
-    <!-- Contenedor de Resultados -->
-    <div id="seccionResultado" style="display: none;">
-        <div class="panel-stats">
-            <span id="statAhorro">Ahorro: 0%</span>
-            <span id="statTokens">Tokens: 0 ➔ 0</span>
-            <span id="statDinero" style="color: #2e7d32;">Dinero evitado: $0.00</span>
-        </div>
-        <div class="box-resultado">
-            <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
-            </button>
-            <div id="txtResultado"></div>
-        </div>
-    </div>
+<section class="seo-section">
+  <h2 data-i18n="faqTitle">Preguntas Frecuentes sobre la Reducción de Tokens</h2>
+  <div class="faq-item"><h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3><p data-i18n="faq1A">Combina tres capas: limpieza sin pérdida de espacios y formato, eliminación de fórmulas de cortesía, y detección de frases redundantes mediante embeddings vectoriales (Transformers.js) ejecutados en tu navegador.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq2Q">¿La IA seguirá entendiendo mi mensaje comprimido?</h3><p data-i18n="faq2A">Sí. El motor protege siempre las instrucciones, negaciones, cifras, nombres propios, formatos de salida y bloques de código: solo elimina relleno y repeticiones.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial aquí?</h3><p data-i18n="faq3A">Sí. Toda la lógica se ejecuta en el cliente con JavaScript y WebAssembly. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.</p></div>
+  <div class="faq-item"><h3 data-i18n="faq4Q">¿Cuánto puedo ahorrar realmente?</h3><p data-i18n="faq4A">Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. La herramienta mide tokens con el tokenizador real, no con estimaciones optimistas.</p></div>
+</section>
 
-    <section class="seo-section">
-        <h2 data-i18n="faqTitle">Preguntas Frecuentes sobre la Reducción de Tokens</h2>
-        <div class="faq-item">
-            <h3 data-i18n="faq1Q">¿Cómo funciona este reductor de tokens online?</h3>
-            <p data-i18n="faq1A">Nuestra herramienta utiliza modelos de Embeddings vectoriales (Transformers.js) para analizar la importancia semántica de cada oración en cualquier idioma, además de minificación segura para código y JSON.</p>
-        </div>
-        <div class="faq-item">
-            <h3 data-i18n="faq2Q">¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?</h3>
-            <p data-i18n="faq2A">Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas.</p>
-        </div>
-        <div class="faq-item">
-            <h3 data-i18n="faq3Q">¿Es seguro pegar código confidencial o datos de mi empresa aquí?</h3>
-            <p data-i18n="faq3A">Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript y WebAssembly en tu navegador. Tus datos jamás se transmiten a través de internet.</p>
-        </div>
-        <div class="faq-item">
-            <h3 data-i18n="faq4Q">¿Cuánto dinero puedo ahorrar en la API?</h3>
-            <p data-i18n="faq4A">Dependiendo del formato, puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos mensuales.</p>
-        </div>
-    </section>
+<footer class="footer-branding">
+  <span data-i18n="footerPrefix">Una herramienta desarrollada por </span><a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a><br>
+  <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="footer-github">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span data-i18n="footerGithub">Código abierto: danos una estrella en GitHub</span>
+  </a>
+</footer>
 
-    <footer class="footer-branding">
-        <span data-i18n="footerPrefix">Una herramienta desarrollada por </span><a href="https://rfjsoftware.com" target="_blank" rel="noopener noreferrer">RFJ Software</a><br>
-        <a href="https://github.com/jorgehc1/less-tokens" target="_blank" rel="noopener noreferrer" class="footer-github">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            <span data-i18n="footerGithub">Danos una estrella en GitHub</span>
-        </a>
-    </footer>
+<script>
+/* =========================================================================
+   1. i18n
+   ========================================================================= */
+const translations = {
+  es: {
+    pageTitle:"Reductor de Tokens IA - RFJ Software",
+    h1:"Reductor de Tokens Inteligente",
+    sub:"Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.",
+    tabText:"Texto / Prompts", tabCode:"Código Fuente", tabJson:"JSON / Datos",
+    placeholderText:"Pega un prompt largo, una conversación de chat o un artículo académico...",
+    placeholderCode:"Pega tu código Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios sobrantes sin romper la sintaxis...",
+    placeholderJson:"Pega estructuras JSON, JSONL o XML para minificarlas...",
+    lblNivel:"Nivel:", nivSeguro:"Seguro", nivEquilibrado:"Equilibrado", nivAgresivo:"Agresivo",
+    lblModelo:"Modelo:", lblPrecio:"USD / 1M tokens:",
+    hintSeguro:"Seguro: sin pérdida. Solo normaliza espacios, sangrías y saltos de línea. No se descarga ningún modelo.",
+    hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases redundantes detectadas por embeddings. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
+    hintAgresivo:"Agresivo: además recorta hasta ~55% del texto de prosa priorizando por relevancia (MMR). Revisa el resultado antes de usarlo.",
+    btnCompress:"Comprimir Contexto Gratis",
+    btnDownloading:"Cargando IA local",
+    btnTokenizer:"Cargando tokenizador",
+    btnAnalyzing:"Analizando vectores semánticos",
+    privacyTag:"Procesamiento Local: tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.",
+    btnCopy:"Copiar Resultado", btnCopied:"¡Copiado!",
+    verEliminado:"Ver qué se eliminó",
+    faqTitle:"Preguntas Frecuentes sobre la Reducción de Tokens",
+    faq1Q:"¿Cómo funciona este reductor de tokens online?",
+    faq1A:"Combina tres capas: limpieza sin pérdida de espacios y formato, eliminación de fórmulas de cortesía, y detección de frases redundantes mediante embeddings vectoriales (Transformers.js) ejecutados en tu navegador.",
+    faq2Q:"¿La IA seguirá entendiendo mi mensaje comprimido?",
+    faq2A:"Sí. El motor protege siempre las instrucciones, negaciones, cifras, nombres propios, formatos de salida y bloques de código: solo elimina relleno y repeticiones.",
+    faq3Q:"¿Es seguro pegar código confidencial aquí?",
+    faq3A:"Sí. Toda la lógica se ejecuta en el cliente con JavaScript y WebAssembly. El modelo se descarga una vez y se guarda en la caché del navegador; tus datos nunca se envían a ningún servidor.",
+    faq4Q:"¿Cuánto puedo ahorrar realmente?",
+    faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. La herramienta mide tokens con el tokenizador real, no con estimaciones optimistas.",
+    footerPrefix:"Una herramienta desarrollada por ",
+    footerGithub:"Código abierto: danos una estrella en GitHub",
+    alertShortTitle:"Texto muy corto",
+    alertShortDesc:"Con menos de 25 palabras el análisis semántico no aporta nada; se aplicó solo la limpieza sin pérdida.",
+    alertJsonInvalid:"El contenido no es JSON válido. Se aplicó únicamente limpieza de líneas para no corromper los datos.",
+    alertNoGain:"Este contenido ya estaba optimizado: comprimirlo más dañaría el significado. Se devuelve prácticamente igual.",
+    alertModelo:"Error al cargar el modelo. Se aplicó la limpieza sin pérdida.",
+    statSavePrefix:"Ahorro: ", moneySavedPrefix:"Coste evitado: ~$",
+    tokensLabel:"Tokens", motivoRedundante:"redundante", motivoCortesia:"cortesía / relleno", motivoPresupuesto:"fuera de presupuesto"
+  },
+  en: {
+    pageTitle:"AI Token Reducer - RFJ Software",
+    h1:"Smart Token Reducer",
+    sub:"Optimize your requests for ChatGPT, Claude and Gemini without losing context.",
+    tabText:"Text / Prompts", tabCode:"Source Code", tabJson:"JSON / Data",
+    placeholderText:"Paste a long prompt, a chat conversation or an academic article...",
+    placeholderCode:"Paste your Java, JavaScript, Python code, etc. Comments and extra whitespace are removed without breaking syntax...",
+    placeholderJson:"Paste JSON, JSONL or XML structures to minify them...",
+    lblNivel:"Level:", nivSeguro:"Safe", nivEquilibrado:"Balanced", nivAgresivo:"Aggressive",
+    lblModelo:"Model:", lblPrecio:"USD / 1M tokens:",
+    hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks. No model download.",
+    hintEquilibrado:"Balanced: lossless cleanup + removes politeness and redundant sentences detected via embeddings. Instructions, numbers, negations and output formats are always kept.",
+    hintAgresivo:"Aggressive: additionally trims prose down to ~55% by relevance ranking (MMR). Review the output before using it.",
+    btnCompress:"Compress Context for Free",
+    btnDownloading:"Loading local AI",
+    btnTokenizer:"Loading tokenizer",
+    btnAnalyzing:"Analyzing semantic vectors",
+    privacyTag:"Local Processing: your data is cleaned in your browser and never touches any external server.",
+    btnCopy:"Copy Result", btnCopied:"Copied!",
+    verEliminado:"See what was removed",
+    faqTitle:"Frequently Asked Questions about Token Reduction",
+    faq1Q:"How does this online token reducer work?",
+    faq1A:"Three layers: lossless whitespace and formatting cleanup, removal of politeness formulas, and redundant-sentence detection using vector embeddings (Transformers.js) running in your browser.",
+    faq2Q:"Will the AI still understand my compressed message?",
+    faq2A:"Yes. The engine always protects instructions, negations, numbers, proper nouns, output formats and code blocks: it only removes filler and repetition.",
+    faq3Q:"Is it safe to paste confidential code here?",
+    faq3A:"Yes. All logic runs client-side with JavaScript and WebAssembly. The model is downloaded once and cached by the browser; your data is never sent anywhere.",
+    faq4Q:"How much can I actually save?",
+    faq4A:"It depends on the content. Indented JSON and commented code compress a lot; well-written prompts compress moderately. Token counts come from the real tokenizer, not optimistic estimates.",
+    footerPrefix:"A tool developed by ",
+    footerGithub:"Open source: star us on GitHub",
+    alertShortTitle:"Text too short",
+    alertShortDesc:"Under 25 words semantic analysis adds nothing; only the lossless cleanup was applied.",
+    alertJsonInvalid:"The content is not valid JSON. Only line cleanup was applied so your data is not corrupted.",
+    alertNoGain:"This content was already optimized: compressing further would damage meaning. Returned nearly unchanged.",
+    alertModelo:"Model failed to load. Lossless cleanup was applied instead.",
+    statSavePrefix:"Savings: ", moneySavedPrefix:"Cost avoided: ~$",
+    tokensLabel:"Tokens", motivoRedundante:"redundant", motivoCortesia:"politeness / filler", motivoPresupuesto:"over budget"
+  }
+};
 
-    <script>
-        // --- DICCIONARIO DE TRADUCCIONES ---
-        const translations = {
-            es: {
-                pageTitle: "Reductor de Tokens IA - RFJ Software",
-                h1: "Reductor de Tokens Inteligente",
-                sub: "Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.",
-                tabText: "Texto / Prompts",
-                tabCode: "Código Fuente",
-                tabJson: "JSON / Datos",
-                placeholderText: "Pega un prompt largo, una conversación de chat o un artículo académico...",
-                placeholderCode: "Pega tus archivos de Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios...",
-                placeholderJson: "Pega estructuras JSON o XML para aplanarlas y eliminar toda la sangría innecesaria...",
-                btnCompress: "Comprimir Contexto Gratis",
-                btnDownloading: "Cargando IA local",
-                btnAnalyzing: "Analizando vectores semánticos...",
-                privacyTag: "Procesamiento Local: Tus datos se limpian en tu navegador y nunca tocan ningún servidor ajeno.",
-                btnCopy: "Copiar Resultado",
-                btnCopied: "¡Copiado!",
-                faqTitle: "Preguntas Frecuentes sobre la Reducción de Tokens",
-                faq1Q: "¿Cómo funciona este reductor de tokens online?",
-                faq1A: "Nuestra herramienta utiliza modelos de Embeddings vectoriales (Transformers.js) para analizar la importancia semántica de cada oración en cualquier idioma, descartando el relleno y la cortesía.",
-                faq2Q: "¿La Inteligencia Artificial seguirá entendiendo mi mensaje comprimido?",
-                faq2A: "Sí. Modelos avanzados como GPT-4o o Claude 3.5 no requieren una gramática humana perfecta o conectores de cortesía para entender instrucciones complejas.",
-                faq3Q: "¿Es seguro pegar código confidencial o datos de mi empresa aquí?",
-                faq3A: "Es 100% seguro. Toda la lógica se ejecuta del lado del cliente utilizando JavaScript y WebAssembly en tu navegador. Tus prompts o códigos jamás se transmiten a través de internet.",
-                faq4Q: "¿Cuánto dinero puedo ahorrar en la API de OpenAI o Anthropic?",
-                faq4A: "Dependiendo del formato (especialmente en código fuente), puedes ver reducciones de hasta el 90% en el conteo de tokens de entrada, lo que disminuye drásticamente tus costos de desarrollo mensuales.",
-                footerPrefix: "Una herramienta desarrollada por ",
-                alertShortTitle: "Prompt demasiado corto",
-                alertShortDesc: "Para obtener mejores resultados, define un <strong>rol</strong>, el <strong>contexto</strong> y el <strong>formato</strong> que deseas antes de comprimir.",
-                statSavePrefix: "¡Ahorro del ",
-                moneySavedPrefix: "Dinero evitado: ~$",
-                footerGithub: "Código Abierto: Danos una estrella en GitHub"
-            },
-            en: {
-                pageTitle: "AI Token Reducer - RFJ Software",
-                h1: "Smart Token Reducer",
-                sub: "Optimize your requests for ChatGPT, Claude, and Gemini without losing context.",
-                tabText: "Text / Prompts",
-                tabCode: "Source Code",
-                tabJson: "JSON / Data",
-                placeholderText: "Paste a long prompt, a chat conversation, or an academic article...",
-                placeholderCode: "Paste your Java, JavaScript, Python files, etc. Comments and spaces will be removed...",
-                placeholderJson: "Paste JSON or XML structures to flatten them and remove all unnecessary indentation...",
-                btnCompress: "Compress Context for Free",
-                btnDownloading: "Loading local AI",
-                btnAnalyzing: "Analyzing semantic vectors...",
-                privacyTag: "Local Processing: Your data is cleaned in your browser and never touches any external server.",
-                btnCopy: "Copy Result",
-                btnCopied: "Copied!",
-                faqTitle: "Frequently Asked Questions about Token Reduction",
-                faq1Q: "How does this online token reducer work?",
-                faq1A: "Our tool uses Vector Embedding models (Transformers.js) to analyze the semantic importance of each sentence in any language, discarding filler and politeness.",
-                faq2Q: "Will Artificial Intelligence still understand my compressed message?",
-                faq2A: "Yes. Advanced models like GPT-4o or Claude 3.5 do not require perfect human grammar or polite connectors to understand complex instructions.",
-                faq3Q: "Is it safe to paste confidential code or company data here?",
-                faq3A: "It is 100% safe. All logic runs on the client side using pure JavaScript and WebAssembly in your browser. Your prompts or programming codes are never transmitted over the internet.",
-                faq4Q: "How much money can I save on the OpenAI or Anthropic API?",
-                faq4A: "Depending on the format (especially in source code), you can see reductions of up to 90% in the input token count, drastically decreasing your monthly development costs.",
-                footerPrefix: "A tool developed by ",
-                alertShortTitle: "Prompt too short",
-                alertShortDesc: "For better results, define a <strong>role</strong>, the <strong>context</strong>, and the <strong>format</strong> you want before compressing.",
-                statSavePrefix: "Savings: ",
-                moneySavedPrefix: "Money saved: ~$",
-                footerGithub: "Open Source: Star us on GitHub"
-            }
-        };
+/* =========================================================================
+   2. MOTOR (funciones puras, probadas en Node)
+   ========================================================================= */
 
-        // --- LÓGICA PRINCIPAL ---
-        let modoActual = 'texto';
-        let extractorEmbeddings = null;
-        let tokenDeValidacion = ""; 
-        let idiomaActual = 'es';
+const RELLENO = [
+  [/^\s*(hola|hey|hi|hello|buen(os|as) (d[íi]as|tardes|noches))\b[\s,.!¡]*/i, ''],
+  [/\b(por favor|porfavor)\b[,\s]*/gi, ''],
+  [/\bsi (no )?(es|fuera) (mucha |demasiada )?molestia\b[,\s]*/gi, ''],
+  [/\bsi eres tan amable\b[,\s]*/gi, ''],
+  [/\b(muchas |mil )?gracias( de antemano| por adelantado)?\b[.,\s]*/gi, ''],
+  [/\bespero que (estés|se encuentre|te encuentres)[^.,;]*[.,;]?\s*/gi, ''],
+  [/\bte (lo )?agradecer[ií]a (mucho )?(si|que)\b\s*/gi, ''],
+  [/\bcomo (ya )?(sabes|sabrás|es de tu conocimiento)\b[,\s]*/gi, ''],
+  [/\bcabe (destacar|mencionar|señalar|resaltar) que\b\s*/gi, ''],
+  [/\bes importante (destacar|mencionar|señalar|notar) que\b\s*/gi, ''],
+  [/\ben mi (humilde )?opini[óo]n\b[,\s]*/gi, ''],
+  [/\bcon (el fin|el objetivo|el propósito) de\b/gi, 'para'],
+  [/\ba fin de que\b/gi, 'para que'],
+  [/\bdebido al hecho de que\b/gi, 'porque'],
+  [/\ben el caso de que\b/gi, 'si'],
+  [/\bun (gran )?n[úu]mero (elevado )?de\b/gi, 'muchos'],
+  [/\ben este momento\b/gi, 'ahora'],
+  [/\bde manera (adicional|complementaria)\b/gi, 'además'],
+  [/\bplease\b[,\s]*/gi, ''],
+  [/\bthanks?( you)?( so much| a lot)?( in advance)?\b[.,\s]*/gi, ''],
+  [/\bi hope (you'?re|you are|this finds you)[^.,;]*[.,;]?\s*/gi, ''],
+  [/\bif it'?s not too much trouble\b[,\s]*/gi, ''],
+  [/\bi would (really )?(like|appreciate it) (you to|if)\b\s*/gi, ''],
+  [/\bcould you (please )?\b/gi, ''],
+  [/\bas you (may )?(know|are aware)\b[,\s]*/gi, ''],
+  [/\bit'?s (important|worth) (to )?(note|noting|mentioning) that\b\s*/gi, ''],
+  [/\bin my (humble )?opinion\b[,\s]*/gi, ''],
+  [/\bin order to\b/gi, 'to'],
+  [/\bdue to the fact that\b/gi, 'because'],
+  [/\bin the event that\b/gi, 'if'],
+  [/\ba large number of\b/gi, 'many'],
+  [/\bat this point in time\b/gi, 'now'],
+  [/\bneedless to say\b[,\s]*/gi, '']
+];
 
-        function cambiarIdioma(lang) {
-            idiomaActual = lang;
-            document.documentElement.lang = lang;
-            
-            document.getElementById('btn-es').classList.toggle('active', lang === 'es');
-            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-            
-            document.title = translations[lang].pageTitle;
+const RE_NEGACION = /\b(no|not|never|nunca|jam[áa]s|sin|except|excepto|salvo|only|solo|s[óo]lo|[úu]nicamente|must|debe|deber[áa]s?|tienes que|siempre|always|required|obligatorio|prohibido|evita|avoid|don'?t|do not|asegúrate|ensure|make sure)\b/i;
+const RE_FORMATO = /\b(json|xml|yaml|csv|markdown|tabla|table|formato|format|schema|esquema|output|salida|responde|respond|devuelve|return|idioma|language)\b/i;
+// El rol y la tarea son el núcleo del prompt: jamás deben recortarse.
+const RE_ROL = /\b(eres|act[úu]a|actuar|comp[óo]rtate|you are|act as|behave as|rol|role|tarea|task|objetivo|goal|contexto|context|experto|expert|especialista|specialist|asistente|assistant|tu trabajo|your job)\b/i;
 
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang][key]) {
-                    el.innerHTML = translations[lang][key];
-                }
-            });
+// Una frase protegida NUNCA se elimina. Perder restricciones, cifras o
+// negaciones es exactamente lo que arruina un prompt comprimido.
+function esProtegida(txt){
+  if(!txt) return false;
+  if(/\d/.test(txt)) return true;
+  if(/[`{}[\]<>|]/.test(txt)) return true;
+  if(/https?:\/\/|\w+\.\w{2,4}\//.test(txt)) return true;
+  if(/\b[A-ZÁÉÍÓÚÑ]{2,}\b/.test(txt)) return true;
+  if(RE_NEGACION.test(txt)) return true;
+  if(RE_FORMATO.test(txt)) return true;
+  if(RE_ROL.test(txt)) return true;
+  if(/[?¿]/.test(txt)) return true;
+  return false;
+}
 
-            const placeholders = {
-                texto: translations[lang].placeholderText,
-                codigo: translations[lang].placeholderCode,
-                json: translations[lang].placeholderJson
-            };
-            document.getElementById('txtOriginal').placeholder = placeholders[modoActual];
+function normalizarEspacios(t){
+  return t.replace(/ /g,' ')
+          .replace(/[ \t]+/g,' ')
+          .replace(/\s+([,.;:!?)\]])/g,'$1')
+          .replace(/([(\[¿¡])\s+/g,'$1')
+          .replace(/ ?\n ?/g,'\n')
+          .replace(/\n{3,}/g,'\n\n')
+          .trim();
+}
 
-            if (!document.getElementById('btnPrincipal').disabled || document.getElementById('textoBtn').innerText.includes('%')) {
-               document.getElementById('textoBtn').innerText = translations[lang].btnCompress;
-            }
+function quitarRelleno(t){
+  let r=t;
+  for(const [re,rep] of RELLENO) r=r.replace(re,rep);
+  r=r.replace(/\s{2,}/g,' ').replace(/^[\s,;:.]+/,'').replace(/\s+([,.;:!?])/g,'$1').trim();
+  if(r && /[a-záéíóúñ]/.test(r[0])) r=r[0].toUpperCase()+r.slice(1);
+  return r;
+}
+
+// Limpia una línea estructural sin tocar su viñeta/prefijo.
+function limpiarLineaEstructural(linea){
+  const m=linea.match(/^(\s*(?:#{1,6}\s|[-*+•·–]\s|\d+[.)]\s|>\s)?)([\s\S]*)$/);
+  const pref=m?m[1]:''; const cuerpo=m?m[2]:linea;
+  const limpio=quitarRelleno(cuerpo);
+  return limpio ? (pref+limpio) : '';
+}
+
+const RE_ESTRUCTURAL=/^\s*(#{1,6}\s|[-*+•·–]\s|\d+[.)]\s|\|.*\||>\s|\[[^\]]+\]|<[^>]+>|[A-Za-zÁÉÍÓÚÑáéíóúñ0-9_ -]{1,40}:\s*\S)/;
+
+function segmentar(texto){
+  const lineas=texto.replace(/\r\n?/g,'\n').split('\n');
+  const bloques=[]; let enFence=false, buffer=[];
+  const volcar=()=>{ if(buffer.length){ bloques.push({tipo:'prosa',texto:buffer.join(' ').replace(/\s+/g,' ').trim()}); buffer=[]; } };
+  for(const linea of lineas){
+    if(/^\s*```/.test(linea)){ volcar(); enFence=!enFence; bloques.push({tipo:'literal',texto:linea.trim()}); continue; }
+    if(enFence){ bloques.push({tipo:'literal',texto:linea}); continue; }
+    if(!linea.trim()){ volcar(); bloques.push({tipo:'vacio'}); continue; }
+    if(RE_ESTRUCTURAL.test(linea)){ volcar(); bloques.push({tipo:'estructura',texto:linea.replace(/\s+$/,'')}); continue; }
+    buffer.push(linea.trim());
+  }
+  volcar();
+  return bloques;
+}
+
+// Intl.Segmenter da segmentación de oraciones correcta en cualquier idioma.
+function dividirOraciones(texto,idioma){
+  if(typeof Intl!=='undefined' && Intl.Segmenter){
+    try{
+      const seg=new Intl.Segmenter(idioma||'es',{granularity:'sentence'});
+      return [...seg.segment(texto)].map(s=>s.segment.trim()).filter(Boolean);
+    }catch(e){}
+  }
+  return texto.split(/(?<=[.?!…])\s+/).map(s=>s.trim()).filter(Boolean);
+}
+
+function coseno(a,b){
+  let dot=0,na=0,nb=0;
+  for(let i=0;i<a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+  const d=Math.sqrt(na)*Math.sqrt(nb);
+  return d===0?0:dot/d;
+}
+
+function centroide(vs){
+  const dim=vs[0].length, c=new Float64Array(dim);
+  for(const v of vs) for(let i=0;i<dim;i++) c[i]+=v[i];
+  for(let i=0;i<dim;i++) c[i]/=vs.length;
+  return c;
+}
+
+/* Selección: (1) quita casi-duplicados, (2) si hay presupuesto, ordena por MMR
+   (relevancia al centroide penalizando redundancia) y recorta. Las unidades
+   protegidas nunca se descartan. */
+function seleccionarOraciones(unidades,vectores,opts){
+  const {umbralDuplicado,ratioObjetivo}=opts;
+  const n=unidades.length;
+  if(n<=2) return unidades.map((_,i)=>i);
+
+  const centro=centroide(vectores);
+  const relevancia=vectores.map(v=>coseno(centro,v));
+
+  const vivos=[];
+  for(let i=0;i<n;i++){
+    if(unidades[i].protegida){ vivos.push(i); continue; }
+    let dup=false;
+    for(const j of vivos){ if(coseno(vectores[i],vectores[j])>=umbralDuplicado){ dup=true; break; } }
+    if(dup) unidades[i].motivo='redundante'; else vivos.push(i);
+  }
+  if(!ratioObjetivo) return vivos;
+
+  const totalChars=vivos.reduce((s,i)=>s+unidades[i].texto.length,0);
+  const objetivo=totalChars*ratioObjetivo;
+  const obligatorias=vivos.filter(i=>unidades[i].protegida||i===vivos[0]);
+  const setObl=new Set(obligatorias);
+  const pendientes=vivos.filter(i=>!setObl.has(i));
+  const elegidos=new Set(obligatorias);
+  let usados=obligatorias.reduce((s,i)=>s+unidades[i].texto.length,0);
+
+  while(pendientes.length && usados<objetivo){
+    let mejor=-1, mejorScore=-Infinity;
+    for(const i of pendientes){
+      let maxSim=0;
+      for(const j of elegidos) maxSim=Math.max(maxSim,coseno(vectores[i],vectores[j]));
+      const score=0.75*relevancia[i]-0.25*maxSim;
+      if(score>mejorScore){ mejorScore=score; mejor=i; }
+    }
+    elegidos.add(mejor);
+    usados+=unidades[mejor].texto.length;
+    pendientes.splice(pendientes.indexOf(mejor),1);
+  }
+  for(const i of pendientes) unidades[i].motivo='presupuesto';
+  return [...elegidos].sort((a,b)=>a-b);
+}
+
+/* ---------- Código ---------- */
+function detectarLenguaje(src){
+  const s=src.slice(0,4000);
+  if(/^\s*<(!doctype|html|\?xml|[a-z]+[\s>])/i.test(src.trim())) return 'html';
+  if(/^\s*(def |class |import |from\s+\S+\s+import|@\w+\s*$|if __name__)/m.test(s) && !/[;{]\s*$/m.test(s)) return 'python';
+  if(/^\s*(#|--|;)/m.test(s) && !/[{};]/.test(s)) return 'hash';
+  return 'clike';
+}
+
+/* Scanner carácter a carácter. Respeta cadenas, template literals y regex.
+   NO elimina saltos de línea: hacerlo rompe ASI, macros y la comprensión
+   del propio modelo. El `\s+ -> ' '` global era el bug más grave. */
+function limpiarCLike(src){
+  let out='',i=0,prev='',prevSig='';
+  const n=src.length;
+  const emitir=c=>{ out+=c; prev=c; if(!/\s/.test(c)) prevSig=c; };
+  while(i<n){
+    const c=src[i], c2=src[i+1];
+    if(c==='/'&&c2==='/'){ while(i<n&&src[i]!=='\n') i++; continue; }
+    if(c==='/'&&c2==='*'){ i+=2; while(i<n&&!(src[i]==='*'&&src[i+1]==='/')) i++; i+=2; continue; }
+    if(c==='"'||c==="'"||c==='`'){
+      const q=c; emitir(c); i++;
+      while(i<n){
+        if(src[i]==='\\'){ out+=src[i]+(src[i+1]||''); i+=2; continue; }
+        const ch=src[i]; out+=ch; i++;
+        if(ch===q) break;
+      }
+      prev=q; prevSig=q; continue;
+    }
+    if(c==='/' && /[(,=:[!&|?{};+\-*%~^<>]/.test(prevSig)){
+      emitir(c); i++;
+      let enClase=false;
+      while(i<n){
+        const ch=src[i];
+        if(ch==='\\'){ out+=ch+(src[i+1]||''); i+=2; continue; }
+        if(ch==='\n') break;
+        out+=ch; i++;
+        if(ch==='[') enClase=true;
+        else if(ch===']') enClase=false;
+        else if(ch==='/'&&!enClase) break;
+      }
+      while(i<n&&/[gimsuyd]/.test(src[i])){ out+=src[i]; i++; }
+      prev='/'; prevSig='/'; continue;
+    }
+    if(c===' '||c==='\t'){
+      let j=i; while(j<n&&(src[j]===' '||src[j]==='\t')) j++;
+      if(prev==='\n'||prev===''){ i=j; continue; }
+      if(j>=n||src[j]==='\n'||src[j]==='\r'){ i=j; continue; }
+      out+=' '; prev=' '; i=j; continue;
+    }
+    if(c==='\n'||c==='\r'){
+      let j=i; while(j<n&&/[\r\n \t]/.test(src[j])) j++;
+      if(out){ out+='\n'; prev='\n'; }
+      i=j; continue;
+    }
+    emitir(c); i++;
+  }
+  return out.split('\n').map(l=>l.replace(/[ \t]+$/,'')).filter(l=>l.length).join('\n').trim();
+}
+
+/* En Python la sangría ES sintaxis: solo se quitan comentarios y líneas vacías. */
+function limpiarPython(src){
+  const lineas=src.replace(/\r\n?/g,'\n').split('\n');
+  const res=[]; let triple=null;
+  for(const raw of lineas){
+    if(triple){ res.push(raw.replace(/\s+$/,'')); if(raw.includes(triple)) triple=null; continue; }
+    let out='',i=0,q=null;
+    const linea=raw.replace(/\s+$/,'');
+    while(i<linea.length){
+      const c=linea[i];
+      if(q){ if(c==='\\'){ out+=c+(linea[i+1]||''); i+=2; continue; } out+=c; if(c===q) q=null; i++; continue; }
+      if(c==='#') break;
+      if(c==='"'||c==="'"){
+        const tri=linea.substr(i,3);
+        if(tri==='"""'||tri==="'''"){
+          const resto=linea.slice(i+3), idx=resto.indexOf(tri);
+          if(idx>=0){ out+=tri+resto.slice(0,idx+3); i+=3+idx+3; }
+          else { out+=tri+resto; i=linea.length; triple=tri; }
+          continue;
         }
+        q=c; out+=c; i++; continue;
+      }
+      out+=c; i++;
+    }
+    out=out.replace(/\s+$/,'');
+    if(!out.trim()) continue;
+    res.push(out);
+  }
+  return res.join('\n').trim();
+}
 
-        function turnstileCompletado(token) {
-            tokenDeValidacion = token;
-            document.getElementById('btnPrincipal').disabled = false;
+function limpiarHash(src){
+  return src.replace(/\r\n?/g,'\n').split('\n')
+    .map(l=>l.replace(/(^|\s)(#|--|;;?)\s.*$/,'').replace(/\s+$/,''))
+    .filter(l=>l.trim()).join('\n').trim();
+}
+
+function limpiarHtml(src){
+  return src.replace(/<!--[\s\S]*?-->/g,'')
+    .replace(/\r\n?/g,'\n').split('\n').map(l=>l.trim()).filter(Boolean).join('\n').trim();
+}
+
+function comprimirCodigo(src){
+  const lang=detectarLenguaje(src);
+  let out;
+  if(lang==='python') out=limpiarPython(src);
+  else if(lang==='html') out=limpiarHtml(src);
+  else if(lang==='hash') out=limpiarHash(src);
+  else out=limpiarCLike(src);
+  return {texto:out,lenguaje:lang};
+}
+
+function comprimirJson(src){
+  const t=src.trim();
+  try{ return {texto:JSON.stringify(JSON.parse(t)),nota:'json'}; }catch(e){}
+  const lineas=t.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lineas.length>1){
+    try{ return {texto:lineas.map(l=>JSON.stringify(JSON.parse(l))).join('\n'),nota:'jsonl'}; }catch(e){}
+  }
+  if(/^\s*<[?a-zA-Z]/.test(t)){
+    return {texto:t.replace(/<!--[\s\S]*?-->/g,'').replace(/>\s+</g,'><').trim(),nota:'xml'};
+  }
+  return {texto:t.split('\n').map(l=>l.replace(/\s+$/,'')).filter(l=>l.trim()).join('\n'),nota:'invalido'};
+}
+
+// Respaldo si el tokenizador real no carga. Mejor que length/4: separa
+// ASCII, acentuados y CJK, que tokenizan a ritmos muy distintos.
+function estimarTokens(texto){
+  if(!texto) return 0;
+  const ascii=(texto.match(/[\x00-\x7F]/g)||[]).length;
+  const noAscii=texto.length-ascii;
+  const cjk=(texto.match(/[　-鿿가-힯]/g)||[]).length;
+  return Math.ceil(ascii/3.9+(noAscii-cjk)/2.2+cjk);
+}
+
+/* =========================================================================
+   3. TRANSFORMERS.JS
+   ========================================================================= */
+const CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+const MODELOS={
+  multi:{id:'Xenova/paraphrase-multilingual-MiniLM-L12-v2'},
+  rapido:{id:'Xenova/all-MiniLM-L6-v2'}
+};
+const LOTE=16;
+
+let libTransformers=null, extractores={}, tokenizer=undefined;
+
+async function cargarLib(){
+  if(!libTransformers){
+    libTransformers=await import(CDN);
+    libTransformers.env.allowLocalModels=false;
+    libTransformers.env.useBrowserCache=true;
+  }
+  return libTransformers;
+}
+
+async function obtenerExtractor(claveModelo){
+  if(extractores[claveModelo]) return extractores[claveModelo];
+  const {pipeline}=await cargarLib();
+  const T=translations[idiomaActual];
+  extractores[claveModelo]=await pipeline('feature-extraction',MODELOS[claveModelo].id,{
+    progress_callback:d=>{
+      if(d.status==='progress'||d.status==='downloading'){
+        const pct=d.progress?Math.round(d.progress):0;
+        setEstado(`${T.btnDownloading} ${pct}%`,pct);
+      }else if(d.status==='ready'){ setEstado(T.btnAnalyzing,100); }
+    }
+  });
+  return extractores[claveModelo];
+}
+
+async function obtenerTokenizer(){
+  if(tokenizer!==undefined) return tokenizer;
+  try{
+    const {AutoTokenizer}=await cargarLib();
+    setEstado(translations[idiomaActual].btnTokenizer,null);
+    tokenizer=await AutoTokenizer.from_pretrained('Xenova/gpt-4');
+  }catch(e){ console.warn('Tokenizador no disponible, usando estimador:',e); tokenizer=null; }
+  return tokenizer;
+}
+
+function contarTokens(t){
+  if(tokenizer){ try{ return tokenizer.encode(t).length; }catch(e){} }
+  return estimarTokens(t);
+}
+
+// Embeddings por lotes: una llamada por cada 16 frases en lugar de una por frase.
+async function embeder(textos,extractor){
+  const vecs=[];
+  for(let i=0;i<textos.length;i+=LOTE){
+    const lote=textos.slice(i,i+LOTE);
+    const t=await extractor(lote,{pooling:'mean',normalize:true});
+    const dim=t.dims[t.dims.length-1];
+    for(let k=0;k<lote.length;k++) vecs.push(Array.from(t.data.slice(k*dim,(k+1)*dim)));
+    setEstado(`${translations[idiomaActual].btnAnalyzing} (${Math.min(i+LOTE,textos.length)}/${textos.length})`,
+              Math.round(Math.min(i+LOTE,textos.length)/textos.length*100));
+  }
+  return vecs;
+}
+
+/* =========================================================================
+   4. PIPELINE DE TEXTO
+   ========================================================================= */
+const PERFILES={
+  seguro:      {relleno:false, semantico:false, umbralDuplicado:1,    ratioObjetivo:0},
+  equilibrado: {relleno:true,  semantico:true,  umbralDuplicado:0.92, ratioObjetivo:0},
+  agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0.55}
+};
+
+async function comprimirTexto(input,nivel){
+  const cfg=PERFILES[nivel];
+  const eliminados=[];
+  const bloques=segmentar(normalizarEspacios(input));
+
+  // Prosa -> oraciones
+  for(const b of bloques){
+    if(b.tipo!=='prosa') continue;
+    b.oraciones=dividirOraciones(b.texto,idiomaActual).map(o=>({texto:o,protegida:esProtegida(o),mantener:true}));
+  }
+
+  // Capa 1: relleno / cortesía
+  if(cfg.relleno){
+    for(const b of bloques){
+      if(b.tipo==='estructura'){
+        const antes=b.texto;
+        b.texto=limpiarLineaEstructural(b.texto);
+        if(!b.texto) eliminados.push({texto:antes,motivo:'cortesia'});
+      }else if(b.tipo==='prosa'){
+        for(const o of b.oraciones){
+          const antes=o.texto;
+          const limpio=quitarRelleno(o.texto);
+          if(!limpio || limpio.replace(/[^\p{L}\p{N}]/gu,'').length<2){
+            o.mantener=false; eliminados.push({texto:antes,motivo:'cortesia'});
+          }else{ o.texto=limpio; }
         }
+      }
+    }
+  }
 
-        function cambiarPestana(modo, boton) {
-            modoActual = modo;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            boton.classList.add('active');
-            
-            document.getElementById('alertaCalidad').style.display = 'none';
-            
-            const placeholders = {
-                texto: translations[idiomaActual].placeholderText,
-                codigo: translations[idiomaActual].placeholderCode,
-                json: translations[idiomaActual].placeholderJson
-            };
-            document.getElementById('txtOriginal').placeholder = placeholders[modo];
+  // Capa 2: análisis semántico sobre oraciones de prosa
+  const unidades=[];
+  if(cfg.semantico){
+    for(const b of bloques){
+      if(b.tipo!=='prosa') continue;
+      for(const o of b.oraciones) if(o.mantener) unidades.push(o);
+    }
+  }
+
+  let avisoModelo=false;
+  if(cfg.semantico && unidades.length>=4){
+    try{
+      const extractor=await obtenerExtractor(document.getElementById('selModelo').value);
+      const vecs=await embeder(unidades.map(u=>u.texto),extractor);
+      const idx=new Set(seleccionarOraciones(unidades,vecs,cfg));
+      unidades.forEach((u,i)=>{
+        if(!idx.has(i)){
+          u.mantener=false;
+          eliminados.push({texto:u.texto,motivo:u.motivo==='presupuesto'?'presupuesto':'redundante'});
         }
+      });
+    }catch(e){ console.error('Fallo del modelo:',e); avisoModelo=true; }
+  }
 
-        // --- TRANSFORMERS.JS: MODELO DE EMBEDDINGS VECTORIALES ---
-        async function obtenerExtractor() {
-            if (!extractorEmbeddings) {
-                const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
-                env.allowLocalModels = false;
+  // Reconstrucción respetando el orden y la estructura original
+  const salida=[];
+  for(const b of bloques){
+    if(b.tipo==='vacio'){ if(salida.length && salida[salida.length-1]!=='') salida.push(''); continue; }
+    if(b.tipo==='literal'){ salida.push(b.texto); continue; }
+    if(b.tipo==='estructura'){ if(b.texto.trim()) salida.push(b.texto); continue; }
+    if(b.tipo==='prosa'){
+      const txt=b.oraciones.filter(o=>o.mantener).map(o=>o.texto).join(' ').trim();
+      if(txt) salida.push(txt);
+    }
+  }
+  let out=salida.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+  if(!out) out=normalizarEspacios(input);
+  return {texto:out,eliminados,avisoModelo};
+}
 
-                const textoBtn = document.getElementById('textoBtn');
-                const textoDescarga = translations[idiomaActual].btnDownloading;
+/* =========================================================================
+   5. UI
+   ========================================================================= */
+let modoActual='texto', nivelActual='equilibrado', idiomaActual='es', tokenValidacion='';
 
-                // Carga del modelo ultraligero multilingüe (~23MB)
-                extractorEmbeddings = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-                    progress_callback: (data) => {
-                        if (data.status === 'progress' || data.status === 'downloading') {
-                            let pct = data.progress ? Math.round(data.progress) : 0;
-                            textoBtn.innerText = `${textoDescarga} (${pct}%)`;
-                        } else if (data.status === 'ready') {
-                            textoBtn.innerText = translations[idiomaActual].btnAnalyzing;
-                        }
-                    }
-                });
-            }
-            return extractorEmbeddings;
-        }
+function $(id){ return document.getElementById(id); }
 
-        function similitudCoseno(vecA, vecB) {
-            let dotProduct = 0;
-            let normA = 0;
-            let normB = 0;
-            for (let i = 0; i < vecA.length; i++) {
-                dotProduct += vecA[i] * vecB[i];
-                normA += vecA[i] * vecA[i];
-                normB += vecB[i] * vecB[i];
-            }
-            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-        }
+function setEstado(txt,pct){
+  $('textoBtn').innerText=txt;
+  const barra=$('barra');
+  if(pct===null||pct===undefined){ barra.style.display='none'; return; }
+  barra.style.display='block';
+  $('barraFill').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
 
-        async function procesarOptimizacion() {
-            const input = document.getElementById('txtOriginal').value;
-            const alerta = document.getElementById('alertaCalidad');
-            const btn = document.getElementById('btnPrincipal');
-            const textoBtn = document.getElementById('textoBtn');
-            const iconoBtnOriginal = document.getElementById('iconoBtn').outerHTML;
-            
-            alerta.style.display = 'none';
-            if (!input.trim()) return;
+function mostrarAlerta(tipo,html){
+  const a=$('alertaCalidad');
+  a.className='alerta-calidad alerta-'+tipo;
+  a.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${html}</div>`;
+  a.style.display='flex';
+}
 
-            const tokensAntes = Math.ceil(input.length / 4);
-            let output = input;
+function cambiarIdioma(lang){
+  idiomaActual=lang;
+  document.documentElement.lang=lang;
+  $('btn-es').classList.toggle('active',lang==='es');
+  $('btn-en').classList.toggle('active',lang==='en');
+  document.title=translations[lang].pageTitle;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n');
+    if(translations[lang][k]) el.innerHTML=translations[lang][k];
+  });
+  actualizarPlaceholder();
+  actualizarHint();
+  if(!$('btnPrincipal').classList.contains('cargando')) $('textoBtn').innerText=translations[lang].btnCompress;
+}
 
-            try {
-                btn.disabled = true;
-                document.getElementById('iconoBtn').outerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg><style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>`; 
+function actualizarPlaceholder(){
+  const p={texto:'placeholderText',codigo:'placeholderCode',json:'placeholderJson'}[modoActual];
+  $('txtOriginal').placeholder=translations[idiomaActual][p];
+}
 
-                if (modoActual === 'texto') {
-                    const numPalabras = input.trim().split(/\s+/).length;
-                    if (numPalabras < 10) {
-                        alerta.className = 'alerta-calidad alerta-advertencia';
-                        alerta.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            <div>
-                                <strong>${translations[idiomaActual].alertShortTitle} (${numPalabras}):</strong><br> 
-                                ${translations[idiomaActual].alertShortDesc}
-                            </div>
-                        `;
-                        alerta.style.display = 'flex';
-                        if (typeof turnstile !== 'undefined') turnstile.reset();
-                        return;
-                    }
+function actualizarHint(){
+  const k={seguro:'hintSeguro',equilibrado:'hintEquilibrado',agresivo:'hintAgresivo'}[nivelActual];
+  $('hintNivel').innerHTML=translations[idiomaActual][k];
+}
 
-                    textoBtn.innerText = extractorEmbeddings ? translations[idiomaActual].btnAnalyzing : translations[idiomaActual].btnDownloading;
+function cambiarPestana(modo,boton){
+  modoActual=modo;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  boton.classList.add('active');
+  $('alertaCalidad').style.display='none';
+  // Nivel y modelo solo aplican al modo texto.
+  const soloTexto=modo==='texto';
+  $('selNivel').parentElement.style.display=soloTexto?'':'none';
+  $('wrapModelo').style.display=soloTexto?'':'none';
+  $('hintNivel').style.display=soloTexto?'':'none';
+  actualizarPlaceholder();
+}
 
-                    // 1. Dividir texto por oraciones
-                    const oraciones = input
-                        .replace(/[\r\n]+/g, ' ')
-                        .split(/(?<=[.?!])\s+/)
-                        .map(o => o.trim())
-                        .filter(o => o.length > 0);
+$('selNivel').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  nivelActual=b.dataset.nivel;
+  [...$('selNivel').children].forEach(x=>x.classList.toggle('active',x===b));
+  actualizarHint();
+});
 
-                    if (oraciones.length <= 1) {
-                        output = input.trim();
-                    } else {
-                        const extractor = await obtenerExtractor();
+function turnstileCompletado(token){ tokenValidacion=token; $('btnPrincipal').disabled=false; }
+function turnstileExpirado(){ tokenValidacion=''; $('btnPrincipal').disabled=true; }
+// Si Turnstile no llega a cargar (bloqueadores, offline), no dejamos la app inservible.
+setTimeout(()=>{ if(typeof turnstile==='undefined') $('btnPrincipal').disabled=false; },4000);
 
-                        // 2. Extraer vector de la intención global del prompt
-                        const outputGlobal = await extractor(input, { pooling: 'mean', normalize: true });
-                        const vectorGlobal = outputGlobal.data;
+async function procesarOptimizacion(){
+  const input=$('txtOriginal').value;
+  const btn=$('btnPrincipal');
+  const T=translations[idiomaActual];
+  $('alertaCalidad').style.display='none';
+  $('detalles').style.display='none';
+  if(!input.trim()) return;
 
-                        // 3. Evaluar relevancia semántica de cada oración
-                        const puntuaciones = [];
-                        for (let i = 0; i < oraciones.length; i++) {
-                            const outOracion = await extractor(oraciones[i], { pooling: 'mean', normalize: true });
-                            const vectorOracion = outOracion.data;
-                            const score = similitudCoseno(vectorGlobal, vectorOracion);
-                            puntuaciones.push({ oracion: oraciones[i], score, index: i });
-                        }
+  btn.disabled=true; btn.classList.add('cargando');
+  let output=input, eliminados=[], nota='';
 
-                        // 4. Filtrar frases de bajo valor (saludos/cortesías obtienen scores < 0.45)
-                        const UMBRAL_RELEVANCIA = 0.45;
-                        const oracionesClave = puntuaciones
-                            .filter(item => item.score >= UMBRAL_RELEVANCIA)
-                            .sort((a, b) => a.index - b.index)
-                            .map(item => item.oracion);
+  try{
+    await obtenerTokenizer();
+    const tokensAntes=contarTokens(input);
 
-                        let limpio = oracionesClave.join(' ');
-                        if (!limpio.trim()) limpio = input;
+    if(modoActual==='texto'){
+      const palabras=input.trim().split(/\s+/).length;
+      let nivel=nivelActual;
+      if(palabras<25 && nivel!=='seguro'){
+        nivel='seguro';
+        mostrarAlerta('advertencia',`<strong>${T.alertShortTitle} (${palabras}):</strong><br>${T.alertShortDesc}`);
+      }
+      const r=await comprimirTexto(input,nivel);
+      output=r.texto; eliminados=r.eliminados;
+      if(r.avisoModelo) mostrarAlerta('error',T.alertModelo);
+    }else if(modoActual==='codigo'){
+      const r=comprimirCodigo(input);
+      output=r.texto; nota=r.lenguaje;
+    }else{
+      const r=comprimirJson(input);
+      output=r.texto;
+      if(r.nota==='invalido') mostrarAlerta('advertencia',T.alertJsonInvalid);
+    }
 
-                        // 5. Sanear muletillas residuales y puntuación
-                        limpio = limpio
-                            .replace(/\b(por favor|please|si no es mucha molestia|if it's not too much trouble)\b/gi, '')
-                            .replace(/\s+([,.:;?!])/g, '$1')
-                            .replace(/\s+/g, ' ')
-                            .trim();
+    output=output.trim();
+    const tokensDespues=contarTokens(output);
+    let ahorro=tokensAntes>0?Math.round((tokensAntes-tokensDespues)/tokensAntes*100):0;
+    if(ahorro<0) ahorro=0;
+    if(ahorro===0 && modoActual==='texto') mostrarAlerta('info',T.alertNoGain);
 
-                        output = limpio.length > 0 ? limpio.charAt(0).toUpperCase() + limpio.slice(1) : input;
-                    }
+    const precio=parseFloat($('inpPrecio').value)||0;
+    const ahorrado=Math.max(0,tokensAntes-tokensDespues)*precio/1e6;
 
-                } else if (modoActual === 'codigo') {
-                    // Minificación segura conservando cadenas de texto
-                    const regexCodigo = /(["'`])(?:(?=(\\?))\2.)*?\1|\/\*[\s\S]*?\*\/|\/\/.*$/gm;
-                    
-                    output = output.replace(regexCodigo, function(match, grupoCadena) {
-                        if (grupoCadena) return match;
-                        return '';
-                    });
-                    output = output.replace(/\s+/g, ' ');
+    $('txtResultado').innerText=output;
+    $('statAhorro').innerText=`${T.statSavePrefix}${ahorro}%`;
+    $('statTokens').innerText=`${T.tokensLabel}: ${tokensAntes.toLocaleString()} ➔ ${tokensDespues.toLocaleString()}${nota?' · '+nota:''}`;
+    $('statDinero').innerText=`${T.moneySavedPrefix}${ahorrado.toFixed(5)}`;
+    $('seccionResultado').style.display='block';
 
-                } else if (modoActual === 'json') {
-                    // Minificación limpia de JSON
-                    try {
-                        const jsonObjeto = JSON.parse(input);
-                        output = JSON.stringify(jsonObjeto);
-                    } catch (e) {
-                        output = output.replace(/\s+/g, ' ');
-                    }
-                }
+    if(eliminados.length){
+      const motivos={redundante:T.motivoRedundante,cortesia:T.motivoCortesia,presupuesto:T.motivoPresupuesto};
+      $('listaEliminado').innerHTML=eliminados.map(e=>{
+        const t=e.texto.length>160?e.texto.slice(0,160)+'…':e.texto;
+        const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        return `<li>${esc}<br><span class="motivo">${motivos[e.motivo]||e.motivo}</span></li>`;
+      }).join('');
+      $('detalles').style.display='block';
+    }
 
-            } catch (error) {
-                console.error("Error procesando optimización:", error);
-            } finally {
-                textoBtn.innerText = translations[idiomaActual].btnCompress;
-                document.querySelector('#btnPrincipal svg').outerHTML = iconoBtnOriginal;
-            }
+    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
+  }catch(err){
+    console.error('Error procesando:',err);
+    mostrarAlerta('error',String(err && err.message ? err.message : err));
+  }finally{
+    btn.classList.remove('cargando');
+    setEstado(T.btnCompress,null);
+    if(typeof turnstile!=='undefined'){ turnstile.reset(); btn.disabled=true; }
+    else btn.disabled=false;
+  }
+}
 
-            output = output.trim();
-            const tokensDespues = Math.ceil(output.length / 4);
-            
-            let ahorro = Math.round(((tokensAntes - tokensDespues) / tokensAntes) * 100);
-            if (ahorro < 0) ahorro = 0;
+function copiarTexto(){
+  navigator.clipboard.writeText($('txtResultado').innerText).then(()=>{
+    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
+  });
+}
 
-            const costoEvitado = ((tokensAntes - tokensDespues) * 0.000005).toFixed(4);
-
-            document.getElementById('txtResultado').innerText = output;
-            document.getElementById('statAhorro').innerText = `${translations[idiomaActual].statSavePrefix}${ahorro}%!`;
-            document.getElementById('statTokens').innerText = `Tokens: ${tokensAntes} ➔ ${tokensDespues}`;
-            document.getElementById('statDinero').innerText = `${translations[idiomaActual].moneySavedPrefix}${costoEvitado}`;
-            
-            document.getElementById('seccionResultado').style.display = 'block';
-            
-            document.getElementById('btnCopiar').innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span id="txtBtnCopiar">${translations[idiomaActual].btnCopy}</span>
-            `;
-
-            if (typeof turnstile !== 'undefined') {
-                turnstile.reset();
-                document.getElementById('btnPrincipal').disabled = true;
-            }
-        }
-        
-        function copiarTexto() {
-            const texto = document.getElementById('txtResultado').innerText;
-            navigator.clipboard.writeText(texto).then(() => {
-                document.getElementById('btnCopiar').innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span id="txtBtnCopiar">${translations[idiomaActual].btnCopied}</span>
-                `;
-            });
-        }
-    </script>
+actualizarHint();
+</script>
 </body>
 </html>
