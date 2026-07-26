@@ -570,19 +570,29 @@ async function comprimirTexto(input,nivel){
   }
 
   // Capa 1: relleno / cortesía
-  if(cfg.relleno){
-    for(const b of bloques){
-      if(b.tipo==='estructura'){
-        const antes=b.texto;
-        b.texto=limpiarLineaEstructural(b.texto);
-        if(!b.texto) eliminados.push({texto:antes,motivo:'cortesia'});
-      }else if(b.tipo==='prosa'){
-        for(const o of b.oraciones){
-          const antes=o.texto;
-          const limpio=quitarRelleno(o.texto);
-          if(!limpio || limpio.replace(/[^\p{L}\p{N}]/gu,'').length<2){
-            o.mantener=false; eliminados.push({texto:antes,motivo:'cortesia'});
-          }else{ o.texto=limpio; }
+  if (cfg.relleno) {
+    for (const b of bloques) {
+      if (b.tipo === 'estructura') {
+        const antes = b.texto;
+        b.texto = limpiarLineaEstructural(b.texto);
+        if (!b.texto) eliminados.push({ texto: antes, motivo: 'cortesia' });
+      } else if (b.tipo === 'prosa') {
+        for (const o of b.oraciones) {
+          const antes = o.texto;
+          let limpio = quitarRelleno(o.texto);
+          
+          // Limpia puntuación o conectores iniciales huérfanos sobrantes (ej: "^. ", "^, ")
+          limpio = limpio.replace(/^[\s,;:.-]+/, '').trim();
+  
+          // Si lo que queda es súper corto (< 3 palabras) y no es protegida, se considera residuo de cortesía
+          const palabrasUtiles = limpio.split(/\s+/).filter(w => w.length > 2);
+          
+          if (!limpio || (!o.protegida && palabrasUtiles.length < 2)) {
+            o.mantener = false; 
+            eliminados.push({ texto: antes, motivo: 'cortesia' });
+          } else { 
+            o.texto = limpio; 
+          }
         }
       }
     }
