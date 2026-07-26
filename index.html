@@ -353,7 +353,22 @@ function normalizarEspacios(t){
 function quitarRelleno(t){
   let r = t;
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
-  r = r.replace(/\s{2,}/g,' ').replace(/^[\s,;:.]+/,'').replace(/\s+([,.;:!?])/g,'$1').trim();
+  
+  // Limpia conectores y muletillas sobrantes al inicio tras aplicar las regex
+  r = r.replace(/^\s*(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches)[.,;!]*/i, '')
+       .replace(/^\s*(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable[.,;!]*/i, '')
+       .replace(/^\s*(y\s+)?si\s+(no\s+)?es\s+mucha\s+molestia[.,;!]*/i, '')
+       .replace(/^\s*(por\s*favor|please)[.,;!]*/i, '')
+       .replace(/\s{2,}/g, ' ')
+       .replace(/^[\s,;:.-]+/, '')
+       .replace(/\s+([,.;:!?])/g, '$1')
+       .trim();
+
+  // Preserva el signo de apertura ¿ si existía
+  if (t.includes('¿') && !r.includes('¿')) {
+    r = '¿' + r;
+  }
+
   if(r && /[a-záéíóúñ]/i.test(r[0])) r = r[0].toUpperCase() + r.slice(1);
   return r;
 }
