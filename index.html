@@ -456,31 +456,39 @@ function calcularSimilitudJaccard(s1, s2) {
 function seleccionarOraciones(unidades, vectores, opts){
   const {umbralDuplicado, ratioObjetivo} = opts;
   const n = unidades.length;
-  if(n <= 2) return unidades.map((_, i) => i);
+  if(n <= 1) return unidades.map((_, i) => i);
 
   const centro = centroide(vectores);
   const relevancia = vectores.map(v => coseno(centro, v));
 
   const vivos = [];
   for(let i = 0; i < n; i++){
-    if(unidades[i].protegida){ vivos.push(i); continue; }
-    
     let dup = false;
+
+    // REGLA CLAVE: Incluso si la oración es 'protegida', verificamos si es un DUPLICADO de algo que ya guardamos.
     for(const j of vivos){
       const simVectorial = coseno(vectores[i], vectores[j]);
       const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
       
+      // Si coinciden en mas del 65% sintácticamente o superan el umbral vectorial, ES REDUNDANTE
       if(simVectorial >= umbralDuplicado || simSintactica >= 0.65){
         dup = true; 
         break; 
       }
     }
-    if(dup) unidades[i].motivo = 'redundante'; 
-    else vivos.push(i);
+
+    if(dup) {
+      unidades[i].motivo = 'redundante';
+      unidades[i].mantener = false;
+    } else {
+      vivos.push(i);
+    }
   }
   
+  // Si no hay limite por ratio (modo Equilibrado), devolvemos los no-duplicados
   if(!ratioObjetivo) return vivos;
 
+  // Lógica MMR para modo Agresivo sobre las oraciones no duplicadas
   const totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
   const objetivo = totalChars * ratioObjetivo;
   const obligatorias = vivos.filter(i => unidades[i].protegida || i === vivos[0]);
@@ -631,18 +639,19 @@ async function comprimirTexto(input,nivel){
   }
 
   let avisoModelo=false;
-  if(cfg.semantico && unidades.length>=4){
-    try{
-      const extractor=await obtenerExtractor(document.getElementById('selModelo').value);
-      const vecs=await embeder(unidades.map(u=>u.texto),extractor);
-      const idx=new Set(seleccionarOraciones(unidades,vecs,cfg));
-      unidades.forEach((u,i)=>{
-        if(!idx.has(i)){
-          u.mantener=false;
-          eliminados.push({texto:u.texto,motivo:u.motivo==='presupuesto'?'presupuesto':'redundante'});
+  // Cambiar la condición 'unidades.length >= 4' por 'unidades.length >= 2'
+  if (cfg.semantico && unidades.length >= 2) {
+    try {
+      const extractor = await obtenerExtractor(document.getElementById('selModelo').value);
+      const vecs = await embeder(unidades.map(u => u.texto), extractor);
+      const idx = new Set(seleccionarOraciones(unidades, vecs, cfg));
+      unidades.forEach((u, i) => {
+        if (!idx.has(i)) {
+          u.mantener = false;
+          eliminados.push({ texto: u.texto, motivo: u.motivo === 'presupuesto' ? 'presupuesto' : 'redundante' });
         }
       });
-    }catch(e){ console.error('Fallo del modelo:',e); avisoModelo=true; }
+    } catch (e) { console.error('Fallo del modelo:', e); avisoModelo = true; }
   }
 
   // Reconstrucción respetando el orden y la estructura original
