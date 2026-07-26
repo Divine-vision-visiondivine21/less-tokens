@@ -751,7 +751,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // 3. Capa 2: Deduplicación por Cobertura Lexical / Inclusión Directa
+  // 3. Capa 2: Deduplicación por Acumulado de Contenido Visto
   const unidades = [];
   for (const b of bloques) {
     if (b.tipo !== 'prosa') continue;
@@ -760,21 +760,38 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Compara cada oración con las anteriores
+  // Conjunto global con todas las palabras clave ya leídas en el prompt
+  const palabrasVistas = new Set();
+
   for (let i = 0; i < unidades.length; i++) {
-    for (let j = 0; j < i; j++) {
-      if (!unidades[j].mantener) continue;
-      
-      const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
-      const simInclusion = calcularSimilitudInclusion(unidades[j].texto, unidades[i].texto);
-      
-      // Si la nueva oración comparte > 50% de sus palabras clave con una anterior, SE ELIMINA
-      if (simSintactica >= 0.50 || simInclusion >= 0.55) {
+    const textoActual = unidades[i].texto;
+    
+    // Extraemos palabras clave de la oración actual (> 3 letras)
+    const palabrasOracion = textoActual.toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante', 'asegurate', 'emplear'].includes(w));
+
+    if (palabrasOracion.length > 0) {
+      let repetidas = 0;
+      for (const p of palabrasOracion) {
+        if (palabrasVistas.has(p)) repetidas++;
+      }
+
+      const ratioNovedad = (palabrasOracion.length - repetidas) / palabrasOracion.length;
+
+      // Si más del 60% de las palabras clave de esta oración YA SE DIERON en oraciones anteriores
+      if (i > 0 && ratioNovedad < 0.40) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
-        eliminados.push({ texto: unidades[i].texto, motivo: 'redundante' });
-        break;
+        eliminados.push({ texto: textoActual, motivo: 'redundante' });
+        continue; // No agregamos sus palabras al acumulado porque se descarta
       }
+    }
+
+    // Si la oración se mantiene, registramos sus palabras en el mapa de contexto visto
+    for (const p of palabrasOracion) {
+      palabrasVistas.add(p);
     }
   }
 
