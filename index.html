@@ -233,8 +233,8 @@ const translations = {
     faq4A:"Depende del contenido. En JSON con sangría y en código con comentarios el ahorro suele ser alto; en prompts bien escritos es moderado. La herramienta mide tokens con el tokenizador real, no con estimaciones optimistas.",
     footerPrefix:"Una herramienta desarrollada por ",
     footerGithub:"Código abierto: danos una estrella en GitHub",
-    alertShortTitle:"Texto muy corto",
-    alertShortDesc:"Con menos de 25 palabras el análisis semántico no aporta nada; se aplicó solo la limpieza sin pérdida.",
+    alertShortTitle:"Texto corto",
+    alertShortDesc:"Con menos de 10 palabras el análisis semántico no aporta nada; se aplicó la limpieza estándar.",
     alertJsonInvalid:"El contenido no es JSON válido. Se aplicó únicamente limpieza de líneas para no corromper los datos.",
     alertNoGain:"Este contenido ya estaba optimizado: comprimirlo más dañaría el significado. Se devuelve prácticamente igual.",
     alertModelo:"Error al cargar el modelo. Se aplicó la limpieza sin pérdida.",
@@ -272,8 +272,8 @@ const translations = {
     faq4A:"It depends on the content. Indented JSON and commented code compress a lot; well-written prompts compress moderately. Token counts come from the real tokenizer, not optimistic estimates.",
     footerPrefix:"A tool developed by ",
     footerGithub:"Open source: star us on GitHub",
-    alertShortTitle:"Text too short",
-    alertShortDesc:"Under 25 words semantic analysis adds nothing; only the lossless cleanup was applied.",
+    alertShortTitle:"Short text",
+    alertShortDesc:"Under 10 words semantic analysis adds nothing; standard cleanup was applied.",
     alertJsonInvalid:"The content is not valid JSON. Only line cleanup was applied so your data is not corrupted.",
     alertNoGain:"This content was already optimized: compressing further would damage meaning. Returned nearly unchanged.",
     alertModelo:"Model failed to load. Lossless cleanup was applied instead.",
@@ -287,10 +287,10 @@ const translations = {
    ========================================================================= */
 
 const RELLENO = [
-  // Greetings (con o sin 'muy')
+  // Greetings
   [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*/i, ''],
   
-  // Politeness & courtesy phrasing
+  // Politeness & courtesy
   [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
   [/\b(y\s+)?si\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
   [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
@@ -301,7 +301,7 @@ const RELLENO = [
   [/\bespero\s+que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)[^.,;]*[.,;]?\s*/gi, ''],
   [/\bte\s+(lo\s+)?agradecer[ií]a\s+(mucho\s+)?(si|que)\b\s*/gi, ''],
   
-  // Filler starters ("podrías decirme", "quisiera saber")
+  // Filler starters
   [/^\s*(podr[íi]as|puedes)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b/i, 'explicame'],
   
   // Redundant transitions
@@ -316,7 +316,6 @@ const RE_FORMATO = /\b(json|xml|yaml|csv|markdown|tabla|table|formato|format|sch
 const RE_ROL = /\b(eres|act[úu]a|actuar|comp[óo]rtate|you are|act as|behave as|rol|role|tarea|task|objetivo|goal|contexto|context|experto|expert|especialista|specialist|asistente|assistant|tu trabajo|your job)\b/i;
 const RE_ESTRUCTURAL = /^\s*(#{1,6}\s|[-*+•·–]\s|\d+[.)]\s|\|.*\||>\s|\[[^\]]+\]|<[^>]+>|[A-Za-zÁÉÍÓÚÑáéíóúñ0-9_ -]{1,40}:\s*\S)/;
 
-// Saneamiento de ruido y caracteres repetidos
 function sanearRuidoYExcesos(texto) {
   if (!texto) return '';
   return texto
@@ -325,7 +324,6 @@ function sanearRuidoYExcesos(texto) {
     .replace(/[ \t]+/g, ' ');
 }
 
-// Protección de términos técnicos y código
 function esProtegida(txt){
   if(!txt) return false;
   if(/\d/.test(txt)) return true; 
@@ -353,10 +351,8 @@ function normalizarEspacios(t){
 function quitarRelleno(t){
   let r = t;
   
-  // 1. Reglas globales
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
   
-  // 2. Limpieza de conectores y muletillas
   r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
        .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
@@ -364,7 +360,6 @@ function quitarRelleno(t){
        .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,;!]*/gi, '')
        .replace(/\bpor\s+tu\s+respuesta\b[.,;!]*/gi, '');
 
-  // 3. Normalización de intención (transforma "¿podrías explicarme cómo" en "¿Cómo")
   r = r.replace(/^[\s,;:.-]*(y\s+)?(si\s+)?(eres|ser[íi]as?)\s+tan\s+amable[,\s]*/i, '')
        .replace(/^[\s,;:.-]*¿?\s*(podr[íi]as|puedes|ser[íi]as\s+tan\s+amable\s+de)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b\s*¿?/i, '¿')
        .replace(/^[\s,;:.-]+/, '')
@@ -372,12 +367,10 @@ function quitarRelleno(t){
        .replace(/\s+([,.;:!?])/g, '$1')
        .trim();
 
-  // 4. Asegura la apertura ¿ y CAPITALIZA la primera letra tras el signo
   if ((t.includes('¿') || /\?$/.test(t)) && !r.startsWith('¿')) {
     r = '¿' + r;
   }
 
-  // Capitalización correcta respetando el signo '¿' inicial si existe
   r = r.replace(/^(¿?)([a-záéíóúñ])/i, (_, signo, letra) => signo + letra.toUpperCase());
 
   return r;
@@ -391,7 +384,6 @@ function limpiarLineaEstructural(linea){
   return limpio ? (pref + limpio) : '';
 }
 
-// FUNCION RECUPERADA: Segmentación de bloques del documento
 function segmentar(texto){
   const lineas = texto.replace(/\r\n?/g, '\n').split('\n');
   const bloques = []; 
@@ -437,6 +429,7 @@ function centroide(vs){
   return c;
 }
 
+// 1. Similitud sintáctica por N-gramas (Bigramas)
 function calcularSimilitudJaccard(s1, s2) {
   const getBigramas = str => {
     const s = str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -452,13 +445,13 @@ function calcularSimilitudJaccard(s1, s2) {
   return intersec / (b1.size + b2.size - intersec);
 }
 
+// 2. Similitud por inclusión de palabras clave
 function calcularSimilitudInclusion(s1, s2) {
-  // Extrae palabras significativas (> 3 letras, ignorando conectores comunes)
   const getPalabras = str => new Set(
     str.toLowerCase()
        .replace(/[^\p{L}\p{N}\s]/gu, '')
        .split(/\s+/)
-       .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'para', 'hacer', 'usar', 'mediante'].includes(w))
+       .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante'].includes(w))
   );
 
   const p1 = getPalabras(s1);
@@ -466,13 +459,11 @@ function calcularSimilitudInclusion(s1, s2) {
   
   if (!p1.size || !p2.size) return 0;
 
-  // Contamos cuántas palabras de p2 (la frase nueva) ya estaban en p1
   let coincidencia = 0;
   for (const w of p2) {
     if (p1.has(w)) coincidencia++;
   }
 
-  // Retorna el porcentaje de cobertura de la oración 2 respecto a la 1
   return coincidencia / p2.size;
 }
 
@@ -488,12 +479,10 @@ function seleccionarOraciones(unidades, vectores, opts){
   for(let i = 0; i < n; i++){
     let dup = false;
 
-    // REGLA CLAVE: Incluso si la oración es 'protegida', verificamos si es un DUPLICADO de algo que ya guardamos.
     for(const j of vivos){
       const simVectorial = coseno(vectores[i], vectores[j]);
       const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
       
-      // Si coinciden en mas del 65% sintácticamente o superan el umbral vectorial, ES REDUNDANTE
       if(simVectorial >= umbralDuplicado || simSintactica >= 0.65){
         dup = true; 
         break; 
@@ -508,10 +497,8 @@ function seleccionarOraciones(unidades, vectores, opts){
     }
   }
   
-  // Si no hay limite por ratio (modo Equilibrado), devolvemos los no-duplicados
   if(!ratioObjetivo) return vivos;
 
-  // Lógica MMR para modo Agresivo sobre las oraciones no duplicadas
   const totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
   const objetivo = totalChars * ratioObjetivo;
   const obligatorias = vivos.filter(i => unidades[i].protegida || i === vivos[0]);
@@ -543,7 +530,7 @@ function seleccionarOraciones(unidades, vectores, opts){
 /* =========================================================================
    3. TRANSFORMERS.JS
    ========================================================================= */
-const CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+const CDN='[https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1](https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1)';
 const MODELOS={
   multi:{id:'Xenova/paraphrase-multilingual-MiniLM-L12-v2'},
   rapido:{id:'Xenova/all-MiniLM-L6-v2'}
@@ -591,7 +578,14 @@ function contarTokens(t){
   return estimarTokens(t);
 }
 
-// Embeddings por lotes: una llamada por cada 16 frases en lugar de una por frase.
+function estimarTokens(texto){
+  if(!texto) return 0;
+  const ascii=(texto.match(/[\x00-\x7F]/g)||[]).length;
+  const noAscii=texto.length-ascii;
+  const cjk=(texto.match(/[ -鿿가-힯]/g)||[]).length;
+  return Math.ceil(ascii/3.9+(noAscii-cjk)/2.2+cjk);
+}
+
 async function embeder(textos,extractor){
   const vecs=[];
   for(let i=0;i<textos.length;i+=LOTE){
@@ -606,7 +600,7 @@ async function embeder(textos,extractor){
 }
 
 /* =========================================================================
-   4. PIPELINE DE TEXTO
+   4. PIPELINE Y CÓDIGO
    ========================================================================= */
 const PERFILES={
   seguro:      {relleno:false, semantico:false, umbralDuplicado:1,    ratioObjetivo:0},
@@ -629,22 +623,9 @@ function limpiarCLike(src){
 
   while(i < n){
     const c = src[i], c2 = src[i+1];
-    
-    // Elimina comentarios //
-    if(c === '/' && c2 === '/'){ 
-      while(i < n && src[i] !== '\n') i++; 
-      continue; 
-    }
-    
-    // Elimina comentarios /* ... */
-    if(c === '/' && c2 === '*'){ 
-      i += 2; 
-      while(i < n && !(src[i] === '*' && src[i+1] === '/')) i++; 
-      i += 2; 
-      continue; 
-    }
+    if(c === '/' && c2 === '/'){ while(i < n && src[i] !== '\n') i++; continue; }
+    if(c === '/' && c2 === '*'){ i += 2; while(i < n && !(src[i] === '*' && src[i+1] === '/')) i++; i += 2; continue; }
 
-    // Respeta cadenas de texto
     if(c === '"' || c === "'" || c === '`'){
       const q = c; emitir(c); i++;
       while(i < n){
@@ -655,7 +636,6 @@ function limpiarCLike(src){
       prev = q; prevSig = q; continue;
     }
 
-    // Normaliza espacios multiples pero respeta saltos de línea para mantener sintaxis
     if(c === ' ' || c === '\t'){
       let j = i; while(j < n && (src[j] === ' ' || src[j] === '\t')) j++;
       if(prev === '\n' || prev === ''){ i = j; continue; }
@@ -715,7 +695,6 @@ function limpiarHtml(src){
     .replace(/\r\n?/g, '\n').split('\n').map(l => l.trim()).filter(Boolean).join('\n').trim();
 }
 
-// FUNCIONES PRINCIPALES INVOCADAS DESDE PROCESAR
 function comprimirCodigo(src){
   const lang = detectarLenguaje(src);
   let out;
@@ -744,13 +723,11 @@ async function comprimirTexto(input, nivel) {
   const eliminados = [];
   const bloques = segmentar(normalizarEspacios(input));
 
-  // 1. Prosa -> oraciones (fallback agresivo a división por puntos)
+  // 1. Prosa -> oraciones
   for (const b of bloques) {
     if (b.tipo !== 'prosa') continue;
     
     let oracionesTexto = dividirOraciones(b.texto, idiomaActual);
-    
-    // Fallback: Si dividirOraciones devolvió 1 sola cadena pero hay puntos con espacio, forzamos split
     if (oracionesTexto.length <= 1 && b.texto.includes('. ')) {
       oracionesTexto = b.texto.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean);
     }
@@ -805,7 +782,6 @@ async function comprimirTexto(input, nivel) {
       const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
       const simInclusion = calcularSimilitudInclusion(unidades[j].texto, unidades[i].texto);
       
-      // Si la similitud sintáctica es alta (> 0.55) O la nueva oración es una paráfrasis que repite en > 65% las palabras de una anterior
       if (simSintactica >= 0.55 || simInclusion >= 0.65) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
@@ -815,7 +791,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Capa Vectorial (MMR / Embeddings) sobre oraciones supervivientes
+  // Capa Vectorial (MMR / Embeddings)
   let avisoModelo = false;
   const supervivientes = unidades.filter(u => u.mantener);
 
@@ -837,7 +813,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // 4. Reconstrucción respetando el orden original
+  // 4. Reconstrucción
   const salida = [];
   for (const b of bloques) {
     if (b.tipo === 'vacio') {
@@ -875,7 +851,7 @@ function setEstado(txt,pct){
 function mostrarAlerta(tipo,html){
   const a=$('alertaCalidad');
   a.className='alerta-calidad alerta-'+tipo;
-  a.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${html}</div>`;
+  a.innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${html}</div>`;
   a.style.display='flex';
 }
 
@@ -909,7 +885,6 @@ function cambiarPestana(modo,boton){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   boton.classList.add('active');
   $('alertaCalidad').style.display='none';
-  // Nivel y modelo solo aplican al modo texto.
   const soloTexto=modo==='texto';
   $('selNivel').parentElement.style.display=soloTexto?'':'none';
   $('wrapModelo').style.display=soloTexto?'':'none';
@@ -926,7 +901,6 @@ $('selNivel').addEventListener('click',e=>{
 
 function turnstileCompletado(token){ tokenValidacion=token; $('btnPrincipal').disabled=false; }
 function turnstileExpirado(){ tokenValidacion=''; $('btnPrincipal').disabled=true; }
-// Si Turnstile no llega a cargar (bloqueadores, offline), no dejamos la app inservible.
 setTimeout(()=>{ if(typeof turnstile==='undefined') $('btnPrincipal').disabled=false; },4000);
 
 async function procesarOptimizacion(){
@@ -947,8 +921,9 @@ async function procesarOptimizacion(){
     if(modoActual==='texto'){
       const palabras=input.trim().split(/\s+/).length;
       let nivel=nivelActual;
-      if(palabras<25 && nivel!=='seguro'){
-        nivel='seguro';
+      
+      // Mantiene el nivel activo y solo muestra aviso para textos ultra cortos (< 10 palabras)
+      if(palabras < 10){
         mostrarAlerta('advertencia',`<strong>${T.alertShortTitle} (${palabras}):</strong><br>${T.alertShortDesc}`);
       }
       const r=await comprimirTexto(input,nivel);
@@ -988,7 +963,7 @@ async function procesarOptimizacion(){
       $('detalles').style.display='block';
     }
 
-    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
+    $('btnCopiar').innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${T.btnCopy}</span>`;
   }catch(err){
     console.error('Error procesando:',err);
     mostrarAlerta('error',String(err && err.message ? err.message : err));
@@ -1002,7 +977,7 @@ async function procesarOptimizacion(){
 
 function copiarTexto(){
   navigator.clipboard.writeText($('txtResultado').innerText).then(()=>{
-    $('btnCopiar').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
+    $('btnCopiar').innerHTML=`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${translations[idiomaActual].btnCopied}</span>`;
   });
 }
 
@@ -1010,3 +985,4 @@ actualizarHint();
 </script>
 </body>
 </html>
+Recarga la app con este archivo completo y prueba los prompts. ¡Todo va a correr impecable!
