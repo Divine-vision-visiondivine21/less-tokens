@@ -136,7 +136,7 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
     <select id="selModelo">
       <option value="multi" selected>Multilingüe · ~110 MB</option>
       <option value="rapido">Rápido (EN) · ~23 MB</option>
-      <option value="bgem3">BGE-M3 (SOTA Multilingüe) · ~560 MB</option>
+      <option value="bgem3">E5-Multilingüe (SOTA) · ~120 MB</option>
       <option value="llama3">Llama-3-8B · Alto consumo</option>
     </select>
   </span>
@@ -298,21 +298,33 @@ const translations = {
    ========================================================================= */
 
 const RELLENO = [
-  // 1. Saludos y preguntas de cortesía al inicio
-  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*(\b¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va)\b\??[\s,.!¡]*)?/i, ''],
+  // 1. Saludos, vocativos y preguntas de cortesía al inicio
+  [/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))\b[\s,.!¡]*(\b(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)\b[\s,.!¡]*)?(\b¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\b\??[\s,.!¡]*)?/i, ''],
+  [/^\s*(querido|estimado|apreciado)\s+(modelo|asistente|chatgpt|ia|ai|sistema)[\s,.!¡]*/i, ''],
   [/^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]|te\s+encuentras)\??[\s,.!¡]*/i, ''],
   
   // 2. Deseos de buen día / charla informal
-  [/espero\s+que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(bien|de\s+maravilla|teniendo\s+un\s+(excelente|buen)\s+d[íi]a)[^.,;!?]*[.,;!?]?\s*/gi, ''],
+  [/espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un\s+(excelente|buen|bendecido)\s+d[íi]a)[^.,;!?]*[.,;!?]?\s*/gi, ''],
   
-  // 3. Fórmulas de cortesía para pedir cosas
+  // 3. Rodeos de apertura y charlar por este medio
+  [/^\s*(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?\s*/gi, ''],
+  [/\b(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)\s+(de\s+la\s+manera\s+m[áa]s\s+atenta\s+)?(si\s+podr[íi]as?|si\s+ser[íi]as?|si\s+fueras?)?\s*(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?/gi, ''],
+  [/\bhacer\s+el\s+(gran\s+)?favor\s+de\s+/gi, ''],
+  [/\b(y\s+)?si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)(\s+para\s+ti|\s+para\s+usted)?\b[,\s]*/gi, ''],
   [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
-  [/\b(y\s+)?si\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
   [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
   [/\b(necesito|requiero)\s+(tu\s+)?(valiosa\s+|gran\s+)?(ayuda|asistencia)[.,!¡\s]*/gi, ''],
+
+  // 4. Ruido situacional e intros irrelevantes
+  [/\bresulta\s+que\s+(estoy\s+trabajando\s+en\s+mi\s+computadora\s+en\s+mi\s+oficina\s+y\s+)?/gi, ''],
+  [/\bquiero\s+recalcar\s+y\s+volver\s+a\s+repetir\s+que\s+/gi, ''],
+  [/\bes\s+decir,\s+tu\s+trabajo\s+y\s+tu\s+funci[óo]n\s+principal\s+en\s+este\s+momento\s+va\s+a\s+ser\s+/gi, ''],
+  [/\blo\s+que\s+necesito\s+exactamente\s+es\s+que\s+/gi, ''],
   
-  // 4. Agradecimientos y cierres pesados al final
-  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta)?\b[.,!¡\s]*/gi, ''],
+  // 5. Agradecimientos y cierres pesados al final
+  [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?\b[.,!¡\s]*/gi, ''],
+  [/\bquedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta[.,!¡\s]*/gi, ''],
+  [/\b¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?[.,!¡\s]*/gi, ''],
   [/\b(por\s+tu\s+(ayuda|respuesta)[.,!¡\s]*)?te\s+(lo\s+)?agradecer[ií]a\s+(mucho|much[íi]simo)?\b[.,!¡\s]*/gi, ''],
   [/\bpor\s+tu\s+(ayuda|respuesta)\b[.,!¡\s]*/gi, '']
 ];
@@ -358,14 +370,15 @@ function quitarRelleno(t){
   // 1. Aplica reglas del diccionario RELLENO
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
   
-  // 2. Limpieza de cortesías y rodeos
+  // 2. Limpieza de cortesías y rodeos adicionales
   r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
        .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
-       .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)(\s+para\s+ti|\s+para\s+usted)?\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
-       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+ayuda)?\b[.,;!]*/gi, '')
+       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+tiempo)?\b[.,;!]*/gi, '')
        .replace(/\bpor\s+tu\s+(respuesta|ayuda)\b[.,;!]*/gi, '')
-       .replace(/\bnecesito\s+tu\s+valiosa\s+ayuda[.,;!]*/gi, '');
+       .replace(/\bnecesito\s+tu\s+valiosa\s+ayuda[.,;!]*/gi, '')
+       .replace(/\bquedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta[.,;!]*/gi, '');
 
   // 3. Normalización y limpieza de espacios
   r = r.replace(/^[\s,;:.-]+/, '')
@@ -378,8 +391,10 @@ function quitarRelleno(t){
 
   if (!r) return '';
 
-  // 4. Solo añade '¿' SI la oración termina en '?' y no empieza con '¿'
-  if (/\?$/.test(r) && !/^¿/.test(r)) {
+  // 4. Solo añade '¿' SI la oración es una pregunta legítima que termina en '?' y no empieza con '¿'
+  const esPreguntaInterrogativa = /^\s*(¿|c[óo]mo|qu[eé]|cu[áa]n|d[óo]nde|cu[áa]ndo|por\s*qu[eé]|qui[eé]n|cu[áa]l|podr[íi]as|ser[íi]as|te\s+gustar[íi]a|puedes|debo)/i.test(r);
+
+  if (/\?$/.test(r) && esPreguntaInterrogativa && !/^¿/.test(r)) {
     r = '¿' + r;
   }
 
@@ -514,8 +529,8 @@ function seleccionarOraciones(unidades, vectores, opts){
 const MODELOS = {
   multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
   rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
-  bgem3: { id: 'Xenova/bge-m3' },
-  llama3: { id: 'Xenova/Llama-3-8B-Instruct-ONNX' }
+  bgem3: { id: 'Xenova/multilingual-e5-small' },
+  llama3: { id: 'Xenova/all-MiniLM-L12-v2' }
 };
 const LOTE = 16;
 
