@@ -430,73 +430,15 @@ function centroide(vs){
   return c;
 }
 
-// 1. Similitud sintáctica por N-gramas (Bigramas)
-function calcularSimilitudJaccard(s1, s2) {
-  const getBigramas = str => {
-    const s = str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-    const bg = new Set();
-    for (let i = 0; i < s.length - 1; i++) bg.add(s.slice(i, i + 2));
-    return bg;
-  };
-  const b1 = getBigramas(s1);
-  const b2 = getBigramas(s2);
-  if (!b1.size || !b2.size) return 0;
-  let intersec = 0;
-  for (const x of b1) if (b2.has(x)) intersec++;
-  return intersec / (b1.size + b2.size - intersec);
-}
-
-// 2. Similitud por inclusión de palabras clave
-function calcularSimilitudInclusion(s1, s2) {
-  const getPalabras = str => new Set(
-    str.toLowerCase()
-       .replace(/[^\p{L}\p{N}\s]/gu, '')
-       .split(/\s+/)
-       .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante'].includes(w))
-  );
-
-  const p1 = getPalabras(s1);
-  const p2 = getPalabras(s2);
-  
-  if (!p1.size || !p2.size) return 0;
-
-  let coincidencia = 0;
-  for (const w of p2) {
-    if (p1.has(w)) coincidencia++;
-  }
-
-  return coincidencia / p2.size;
-}
-
 function seleccionarOraciones(unidades, vectores, opts){
-  const {umbralDuplicado, ratioObjetivo} = opts;
+  const { ratioObjetivo } = opts;
   const n = unidades.length;
   if(n <= 1) return unidades.map((_, i) => i);
 
   const centro = centroide(vectores);
   const relevancia = vectores.map(v => coseno(centro, v));
 
-  const vivos = [];
-  for(let i = 0; i < n; i++){
-    let dup = false;
-
-    for(const j of vivos){
-      const simVectorial = coseno(vectores[i], vectores[j]);
-      const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
-      
-      if(simVectorial >= umbralDuplicado || simSintactica >= 0.65){
-        dup = true; 
-        break; 
-      }
-    }
-
-    if(dup) {
-      unidades[i].motivo = 'redundante';
-      unidades[i].mantener = false;
-    } else {
-      vivos.push(i);
-    }
-  }
+  const vivos = unidades.map((_, i) => i);
   
   if(!ratioObjetivo) return vivos;
 
@@ -540,13 +482,11 @@ const LOTE = 16;
 let extractores = {}, tokenizer = undefined;
 
 async function cargarLib() {
-  // Usa la librería cargada globalmente desde el <head>
   if (typeof window.transformers !== 'undefined') {
     window.transformers.env.allowLocalModels = false;
     window.transformers.env.useBrowserCache = true;
     return window.transformers;
   }
-  // Fallback si la etiqueta del head tarda un instante
   if (typeof pipeline !== 'undefined') {
     return { pipeline, AutoTokenizer };
   }
@@ -582,6 +522,19 @@ async function obtenerTokenizer() {
     tokenizer = null; 
   }
   return tokenizer;
+}
+
+async function embeder(textos,extractor){
+  const vecs=[];
+  for(let i=0;i<textos.length;i+=LOTE){
+    const lote=textos.slice(i,i+LOTE);
+    const t=await extractor(lote,{pooling:'mean',normalize:true});
+    const dim=t.dims[t.dims.length-1];
+    for(let k=0;k<lote.length;k++) vecs.push(Array.from(t.data.slice(k*dim,(k+1)*dim)));
+    setEstado(`${translations[idiomaActual].btnAnalyzing} (${Math.min(i+LOTE,textos.length)}/${textos.length})`,
+              Math.round(Math.min(i+LOTE,textos.length)/textos.length*100));
+  }
+  return vecs;
 }
 
 /* =========================================================================
@@ -712,13 +665,7 @@ async function comprimirTexto(input, nivel) {
   // 1. Segmentación infalible por Regex de oraciones
   for (const b of bloques) {
     if (b.tipo !== 'prosa') continue;
-    
-    // Forzamos separación explícita por puntos
-    let oracionesTexto = b.texto
-      .split(/(?<=[.?!…])\s+/)
-      .map(s => s.trim())
-      .filter(Boolean);
-
+    let oracionesTexto = b.texto.split(/(?<=[.?!…])\s+/).map(s => s.trim()).filter(Boolean);
     b.oraciones = oracionesTexto.map(o => ({
       texto: o,
       protegida: esProtegida(o),
@@ -739,7 +686,6 @@ async function comprimirTexto(input, nivel) {
           const antes = o.texto;
           let limpio = quitarRelleno(o.texto);
           const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
-
           if (!limpio || (!o.protegida && palabrasReales.length < 2)) {
             o.mantener = false;
             eliminados.push({ texto: antes, motivo: 'cortesia' });
@@ -760,46 +706,42 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Conjunto global con todas las palabras clave ya leídas en el prompt
   const palabrasVistas = new Set();
+  const stopWords = new Set(['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante', 'asegurate', 'emplear', 'debes', 'revisa', 'revises', 'uses', 'enviar']);
 
   for (let i = 0; i < unidades.length; i++) {
     const textoActual = unidades[i].texto;
-    
-    // Extraemos palabras clave de la oración actual (> 3 letras)
-    const palabrasOracion = textoActual.toLowerCase()
+    const palabrasClave = textoActual.toLowerCase()
       .replace(/[^\p{L}\p{N}\s]/gu, '')
       .split(/\s+/)
-      .filter(w => w.length > 3 && !['para', 'como', 'este', 'esta', 'con', 'hacer', 'usar', 'mediante', 'asegurate', 'emplear'].includes(w));
+      .filter(w => w.length > 3 && !stopWords.has(w));
 
-    if (palabrasOracion.length > 0) {
+    if (palabrasClave.length > 0) {
       let repetidas = 0;
-      for (const p of palabrasOracion) {
+      for (const p of palabrasClave) {
         if (palabrasVistas.has(p)) repetidas++;
       }
 
-      const ratioNovedad = (palabrasOracion.length - repetidas) / palabrasOracion.length;
+      const ratioNovedad = (palabrasClave.length - repetidas) / palabrasClave.length;
 
-      // Si más del 60% de las palabras clave de esta oración YA SE DIERON en oraciones anteriores
       if (i > 0 && ratioNovedad < 0.40) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
         eliminados.push({ texto: textoActual, motivo: 'redundante' });
-        continue; // No agregamos sus palabras al acumulado porque se descarta
+        continue;
       }
     }
 
-    // Si la oración se mantiene, registramos sus palabras en el mapa de contexto visto
-    for (const p of palabrasOracion) {
+    for (const p of palabrasClave) {
       palabrasVistas.add(p);
     }
   }
 
-  // 4. Capa Vectorial (MMR)
+  // 4. Capa Vectorial (MMR) para modo Agresivo
   let avisoModelo = false;
   const supervivientes = unidades.filter(u => u.mantener);
 
-  if (cfg.semantico && supervivientes.length >= 2) {
+  if (cfg.semantico && cfg.ratioObjetivo > 0 && supervivientes.length >= 2) {
     try {
       const extractor = await obtenerExtractor(document.getElementById('selModelo').value);
       const vecs = await embeder(supervivientes.map(u => u.texto), extractor);
@@ -940,7 +882,6 @@ async function procesarOptimizacion(){
       const palabras=input.trim().split(/\s+/).length;
       let nivel=nivelActual;
       
-      // Mantiene el nivel activo y solo muestra aviso para textos ultra cortos (< 10 palabras)
       if(palabras < 10){
         mostrarAlerta('advertencia',`<strong>${T.alertShortTitle} (${palabras}):</strong><br>${T.alertShortDesc}`);
       }
@@ -1003,4 +944,3 @@ actualizarHint();
 </script>
 </body>
 </html>
-Recarga la app con este archivo completo y prueba los prompts. ¡Todo va a correr impecable!
