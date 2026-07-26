@@ -706,16 +706,18 @@ function comprimirJson(src){
 async function comprimirTexto(input, nivel) {
   const cfg = PERFILES[nivel];
   const eliminados = [];
-  const bloques = segmentar(normalizarEspacios(input));
+  const textoLimpio = normalizarEspacios(input);
+  const bloques = segmentar(textoLimpio);
 
-  // 1. Prosa -> oraciones
+  // 1. Segmentación infalible por Regex de oraciones
   for (const b of bloques) {
     if (b.tipo !== 'prosa') continue;
     
-    let oracionesTexto = dividirOraciones(b.texto, idiomaActual);
-    if (oracionesTexto.length <= 1 && b.texto.includes('. ')) {
-      oracionesTexto = b.texto.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean);
-    }
+    // Forzamos separación explícita por puntos
+    let oracionesTexto = b.texto
+      .split(/(?<=[.?!…])\s+/)
+      .map(s => s.trim())
+      .filter(Boolean);
 
     b.oraciones = oracionesTexto.map(o => ({
       texto: o,
@@ -725,7 +727,7 @@ async function comprimirTexto(input, nivel) {
     }));
   }
 
-  // 2. Capa 1: Relleno / Cortesía
+  // 2. Capa 1: Relleno y Cortesía
   if (cfg.relleno) {
     for (const b of bloques) {
       if (b.tipo === 'estructura') {
@@ -736,7 +738,6 @@ async function comprimirTexto(input, nivel) {
         for (const o of b.oraciones) {
           const antes = o.texto;
           let limpio = quitarRelleno(o.texto);
-
           const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
 
           if (!limpio || (!o.protegida && palabrasReales.length < 2)) {
@@ -750,7 +751,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // 3. Capa 2: Detección de Redundancia y Deduplicación
+  // 3. Capa 2: Deduplicación por Cobertura Lexical / Inclusión Directa
   const unidades = [];
   for (const b of bloques) {
     if (b.tipo !== 'prosa') continue;
@@ -759,7 +760,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Deduplicación SINTÁCTICA & CONTENIDO RÁPIDO
+  // Compara cada oración con las anteriores
   for (let i = 0; i < unidades.length; i++) {
     for (let j = 0; j < i; j++) {
       if (!unidades[j].mantener) continue;
@@ -767,7 +768,8 @@ async function comprimirTexto(input, nivel) {
       const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
       const simInclusion = calcularSimilitudInclusion(unidades[j].texto, unidades[i].texto);
       
-      if (simSintactica >= 0.55 || simInclusion >= 0.65) {
+      // Si la nueva oración comparte > 50% de sus palabras clave con una anterior, SE ELIMINA
+      if (simSintactica >= 0.50 || simInclusion >= 0.55) {
         unidades[i].mantener = false;
         unidades[i].motivo = 'redundante';
         eliminados.push({ texto: unidades[i].texto, motivo: 'redundante' });
@@ -776,7 +778,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // Capa Vectorial (MMR / Embeddings)
+  // 4. Capa Vectorial (MMR)
   let avisoModelo = false;
   const supervivientes = unidades.filter(u => u.mantener);
 
@@ -798,7 +800,7 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // 4. Reconstrucción
+  // 5. Reconstrucción Final
   const salida = [];
   for (const b of bloques) {
     if (b.tipo === 'vacio') {
@@ -890,10 +892,9 @@ setTimeout(()=>{ if(typeof turnstile==='undefined') $('btnPrincipal').disabled=f
 
 function estimarTokens(texto) {
   if (!texto) return 0;
-  const ascii = (texto.match(/[\x00-\x7F]/g) || []).length;
-  const noAscii = texto.length - ascii;
-  const cjk = (texto.match(/[ -鿿가-힯]/g) || []).length;
-  return Math.ceil(ascii / 3.9 + (noAscii - cjk) / 2.2 + cjk);
+  // Aproximación BPE realista: ~1.3 tokens por palabra en español
+  const palabras = texto.trim().split(/\s+/).length;
+  return Math.ceil(palabras * 1.35);
 }
 
 function contarTokens(t) {
