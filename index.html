@@ -68,8 +68,10 @@ textarea:focus{border-color:var(--primary);outline:none}
 .privacidad-tag{display:flex;align-items:center;justify-content:center;gap:6px;font-size:.85rem;color:var(--success);font-weight:bold;margin-bottom:25px;text-align:center}
 .panel-stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;background:#e2f0d9;border:1px solid #b4c6e7;padding:15px;border-radius:6px;margin-top:15px;font-weight:bold}
 .box-resultado{background:var(--bg);border:1px solid #e9ecef;border-left:5px solid var(--success);padding:20px;border-radius:6px;position:relative;margin-top:15px}
-.btn-copiar{display:flex;align-items:center;gap:6px;position:absolute;top:10px;right:10px;background:#6c757d;color:#fff;padding:6px 12px;font-size:.85rem;border-radius:4px;border:none;cursor:pointer}
-.btn-copiar:hover{background:#5a6268}
+.btn-copiar-group{position:absolute;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:2}
+.btn-copiar{display:flex;align-items:center;gap:6px;background:#6c757d;color:#fff;padding:6px 12px;font-size:.85rem;border-radius:4px;border:none;cursor:pointer;position:static}
+.btn-copiar.btn-xml{background:var(--primary)}
+.btn-copiar:hover{opacity:0.9}
 #txtResultado{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92rem;margin-top:20px;max-height:340px;overflow:auto}
 details.detalles{margin-top:12px;font-size:.9rem}
 details.detalles summary{cursor:pointer;font-weight:600;color:var(--primary)}
@@ -144,8 +146,8 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="mpnet_multi" selected>MPNet Multilingüe (Máxima Precisión ES/EN) · ~220 MB</option>
-      <option value="multi">MiniLM Multilingüe (Ligero) · ~88 MB</option>
+      <option value="multi" selected>Multilingüe Equilibrado (ES/EN) · ~88 MB</option>
+      <option value="mpnet_multi">MPNet Multilingüe (Alta Precisión ES) · ~220 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -184,12 +186,12 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
     <span id="statDinero" style="color:#2e7d32">Coste evitado: $0.00</span>
   </div>
   <div class="box-resultado">
-    <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 6px;">
-      <button class="btn-copiar" onclick="copiarTextoXml()" id="btnCopiarXml" title="Copiar en formato envoltorio XML para Claude / ChatGPT" style="background:#0b3d91;">
+    <div class="btn-copiar-group">
+      <button class="btn-copiar btn-xml" onclick="copiarTextoXml()" id="btnCopiarXml" title="Copiar en formato envoltorio XML para Claude / ChatGPT">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         <span id="txtBtnCopiarXml" data-i18n="btnCopyXml">Copiar XML</span>
       </button>
-      <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar" style="position:static;">
+      <button class="btn-copiar" onclick="copiarTexto()" id="btnCopiar">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span id="txtBtnCopiar" data-i18n="btnCopy">Copiar Resultado</span>
       </button>
