@@ -7,7 +7,7 @@
 <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens de forma segura y 100% local en tu navegador.">
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-<script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 :root{
@@ -613,7 +613,20 @@ async function cargarLib() {
     return { pipeline, AutoTokenizer };
   }
 
-  // Inyección dinámica de CDN alternativa (unpkg) si jsDelivr fue bloqueado por Microsoft Edge o AdBlock
+  // Importación dinámica como módulo ES si el bundle UMD no fue asignado a window
+  try {
+    const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
+    if (mod && mod.pipeline) {
+      mod.env.allowLocalModels = true;
+      mod.env.allowRemoteModels = true;
+      mod.env.localURL = 'https://cdn.rfj.app/models/';
+      mod.env.useBrowserCache = true;
+      window.transformers = mod;
+      return mod;
+    }
+  } catch(eMod) {}
+
+  // Inyección dinámica de CDN UMD alternativa (unpkg)
   if (!document.getElementById('fallback-transformers-script')) {
     const s = document.createElement('script');
     s.id = 'fallback-transformers-script';
@@ -624,12 +637,16 @@ async function cargarLib() {
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 200));
     if (typeof window.transformers !== 'undefined' && window.transformers.pipeline) {
-      window.transformers.env.allowLocalModels = false;
+      window.transformers.env.allowLocalModels = true;
+      window.transformers.env.allowRemoteModels = true;
+      window.transformers.env.localURL = 'https://cdn.rfj.app/models/';
       window.transformers.env.useBrowserCache = true;
       return window.transformers;
     }
     if (typeof window.Transformers !== 'undefined' && window.Transformers.pipeline) {
-      window.Transformers.env.allowLocalModels = false;
+      window.Transformers.env.allowLocalModels = true;
+      window.Transformers.env.allowRemoteModels = true;
+      window.Transformers.env.localURL = 'https://cdn.rfj.app/models/';
       window.Transformers.env.useBrowserCache = true;
       return window.Transformers;
     }
@@ -637,7 +654,7 @@ async function cargarLib() {
       return { pipeline, AutoTokenizer };
     }
   }
-  throw new Error("No se pudo acceder a la librería de IA. Revisa tu conexión o desactiva la protección estricta contra seguimiento de Edge.");
+  throw new Error("No se pudo acceder a la librería de IA. Revisa tu conexión.");
 }
 
 async function obtenerExtractor(claveModelo) {
