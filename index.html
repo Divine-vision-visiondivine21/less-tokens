@@ -308,16 +308,13 @@ const RELLENO = [
   // 3. Fórmulas de cortesía para pedir cosas
   [/\b(por\s*favor|porfavor|please)\b[,\s]*/gi, ''],
   [/\b(y\s+)?si\s+(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[,\s]*/gi, ''],
-  [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
+  [/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[,\s]*/gi, ''],
+  [/\b(necesito|requiero)\s+(tu\s+)?(valiosa\s+|gran\s+)?(ayuda|asistencia)[.,!¡\s]*/gi, ''],
   
   // 4. Agradecimientos y cierres pesados al final
   [/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta)?\b[.,!¡\s]*/gi, ''],
   [/\b(por\s+tu\s+(ayuda|respuesta)[.,!¡\s]*)?te\s+(lo\s+)?agradecer[ií]a\s+(mucho|much[íi]simo)?\b[.,!¡\s]*/gi, ''],
-  [/\bpor\s+tu\s+(ayuda|respuesta)\b[.,!¡\s]*/gi, ''],
-
-  // 5. Reducción de verbos de cortesía a imperativo directo
-  [/\bser[íi]as?\s+(tan\s+)?amable\s+de\s+escribir\b/gi, 'escribe'],
-  [/\bde\s+escribir\b/gi, 'escribe']
+  [/\bpor\s+tu\s+(ayuda|respuesta)\b[.,!¡\s]*/gi, '']
 ];
 
 const RE_NEGACION = /\b(no|not|never|nunca|jam[áa]s|sin|except|excepto|salvo|only|solo|s[óo]lo|[úu]nicamente|must|debe|deber[áa]s?|tienes que|siempre|always|required|obligatorio|prohibido|evita|avoid|don'?t|do not|aseg[úu]rate|ensure|make sure)\b/i;
@@ -342,8 +339,6 @@ function esProtegida(txt){
   if(/\b[a-z]+[A-Z]\w*|\b\w+_\w+/.test(txt)) return true; 
   if(RE_NEGACION.test(txt)) return true;
   if(RE_FORMATO.test(txt)) return true;
-  if(RE_ROL.test(txt)) return true;
-  if(/[?¿]/.test(txt)) return true;
   return false;
 }
 
@@ -367,25 +362,30 @@ function quitarRelleno(t){
   r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
        .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
        .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
-       .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria|fueras?|fuese)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
        .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+ayuda)?\b[.,;!]*/gi, '')
-       .replace(/\bpor\s+tu\s+(respuesta|ayuda)\b[.,;!]*/gi, '');
+       .replace(/\bpor\s+tu\s+(respuesta|ayuda)\b[.,;!]*/gi, '')
+       .replace(/\bnecesito\s+tu\s+valiosa\s+ayuda[.,;!]*/gi, '');
 
-  // 3. Normalización de verbos de cortesía a imperativo directo
-  r = r.replace(/\b(de\s+)?escribir\b/gi, 'escribe')
-       .replace(/^[\s,;:.-]+/, '')
+  // 3. Normalización y limpieza de espacios
+  r = r.replace(/^[\s,;:.-]+/, '')
        .replace(/\s{2,}/g, ' ')
        .replace(/\s+([,.;:!?])/g, '$1')
        .trim();
 
-  // 4. Solo añade '¿' SI la oración termina en '?' y no es una afirmación/rol
-  if (/\?$/.test(r) && !r.startsWith('¿')) {
+  // Limpiar signos de apertura huérfanos al inicio
+  r = r.replace(/^[¿¡\s,;:.-]+/, '');
+
+  if (!r) return '';
+
+  // 4. Solo añade '¿' SI la oración termina en '?' y no empieza con '¿'
+  if (/\?$/.test(r) && !/^¿/.test(r)) {
     r = '¿' + r;
   }
 
   // Quita signos de apertura huérfanos si la oración no es una pregunta
   if (!/\?$/.test(r)) {
-    r = r.replace(/^[¿¡]\s*/, '');
+    r = r.replace(/^¿\s*/, '');
   }
 
   // Capitaliza la primera letra
@@ -589,8 +589,8 @@ async function embeder(textos,extractor){
    ========================================================================= */
 const PERFILES={
   seguro:      {relleno:false, semantico:false, umbralDuplicado:1,    ratioObjetivo:0},
-  equilibrado: {relleno:true,  semantico:true,  umbralDuplicado:0.92, ratioObjetivo:0},
-  agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0.55}
+  equilibrado: {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0},
+  agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.80, ratioObjetivo:0.55}
 };
 
 function detectarLenguaje(src){
@@ -788,22 +788,52 @@ async function comprimirTexto(input, nivel) {
     }
   }
 
-  // 4. Capa Vectorial (MMR) para modo Agresivo
+  // 4. Capa Vectorial (Deduplicación Semántica por Coseno + MMR)
   let avisoModelo = false;
   const supervivientes = unidades.filter(u => u.mantener);
 
-  if (cfg.semantico && cfg.ratioObjetivo > 0 && supervivientes.length >= 2) {
+  if (cfg.semantico && supervivientes.length >= 2) {
     try {
       const extractor = await obtenerExtractor(document.getElementById('selModelo').value);
       const vecs = await embeder(supervivientes.map(u => u.texto), extractor);
-      const idxElegidos = new Set(seleccionarOraciones(supervivientes, vecs, cfg));
+      
+      // Deduplicación semántica por similitud de coseno por pares
+      const mantenidos = [];
+      const vecsMantenidos = [];
 
-      supervivientes.forEach((u, i) => {
-        if (!idxElegidos.has(i)) {
-          u.mantener = false;
-          eliminados.push({ texto: u.texto, motivo: u.motivo === 'presupuesto' ? 'presupuesto' : 'redundante' });
+      for (let i = 0; i < supervivientes.length; i++) {
+        const u = supervivientes[i];
+        const v = vecs[i];
+        let esDuplicado = false;
+
+        for (let j = 0; j < vecsMantenidos.length; j++) {
+          const sim = coseno(v, vecsMantenidos[j]);
+          if (sim >= cfg.umbralDuplicado) {
+            esDuplicado = true;
+            u.mantener = false;
+            u.motivo = 'redundante';
+            eliminados.push({ texto: u.texto, motivo: 'redundante' });
+            break;
+          }
         }
-      });
+
+        if (!esDuplicado) {
+          mantenidos.push(u);
+          vecsMantenidos.push(v);
+        }
+      }
+
+      // Recorte MMR para presupuestos (modo Agresivo)
+      if (cfg.ratioObjetivo > 0 && mantenidos.length >= 2) {
+        const idxElegidos = new Set(seleccionarOraciones(mantenidos, vecsMantenidos, cfg));
+        mantenidos.forEach((u, i) => {
+          if (!idxElegidos.has(i)) {
+            u.mantener = false;
+            eliminados.push({ texto: u.texto, motivo: u.motivo === 'presupuesto' ? 'presupuesto' : 'redundante' });
+          }
+        });
+      }
+
     } catch (e) {
       console.error('Fallo del modelo:', e);
       avisoModelo = true;
