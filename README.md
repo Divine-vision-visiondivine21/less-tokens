@@ -15,7 +15,7 @@
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
     <img src="https://img.shields.io/badge/Transformers.js-FF6F00?style=flat-square&logo=huggingface&logoColor=white" alt="Transformers.js" />
     <img src="https://img.shields.io/badge/100%25%20Local-Privacy%20First-4CAF50?style=flat-square" alt="Privacy First" />
-    <a href="https://github.com/sponsors/TU_USUARIO">
+    <a href="https://github.com/sponsors/jorgehc1">
       <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=flat-square&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors" />
     </a>
   </p>
