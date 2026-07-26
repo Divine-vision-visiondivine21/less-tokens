@@ -134,10 +134,11 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="multi" selected>Multilingüe (Equilibrado) · ~110 MB</option>
+      <option value="qwen">Qwen 0.5B Chat (IA Generativa SLM) · ~350 MB</option>
+      <option value="multi" selected>Multilingüe Equilibrado · ~110 MB</option>
       <option value="mpnet_multi">MPNet Multilingüe (Alta Precisión ES) · ~430 MB</option>
+      <option value="bge_base">BGE Base (Alta Precisión EN) · ~220 MB</option>
       <option value="rapido">Rápido (Inglés) · ~23 MB</option>
-      <option value="bge_small">BGE Small (Inglés) · ~67 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -545,14 +546,40 @@ function seleccionarOraciones(unidades, vectores, opts){
    3. TRANSFORMERS.JS (Carga Global Segura)
    ========================================================================= */
 const MODELOS = {
-  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
-  mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2' },
-  rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
-  bge_small: { id: 'Xenova/bge-small-en-v1.5' }
+  qwen: { id: 'Xenova/Qwen1.5-0.5B-Chat', tipo: 'generativo', webgpu: true },
+  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', tipo: 'embedding', webgpu: true },
+  mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2', tipo: 'embedding', webgpu: true },
+  bge_base: { id: 'Xenova/bge-base-en-v1.5', tipo: 'embedding', webgpu: true },
+  rapido: { id: 'Xenova/all-MiniLM-L6-v2', tipo: 'embedding', webgpu: false }
 };
 const LOTE = 16;
 
-let extractores = {}, tokenizer = undefined;
+let extractores = {}, generadores = {}, tokenizer = undefined;
+
+async function obtenerGenerador(claveModelo) {
+  const usarWebGPU = document.getElementById('chkWebGPU') && document.getElementById('chkWebGPU').checked;
+  const cacheKey = claveModelo + (usarWebGPU ? '_webgpu' : '_cpu');
+  if (generadores[cacheKey]) return generadores[cacheKey];
+  const { pipeline } = await cargarLib();
+  const T = translations[idiomaActual];
+  
+  const options = {
+    progress_callback: d => {
+      if (d.status === 'progress' || d.status === 'downloading') {
+        const pct = d.progress ? Math.round(d.progress) : 0;
+        setEstado(`${T.btnDownloading} ${pct}%`, pct);
+      } else if (d.status === 'ready') { 
+        setEstado(T.btnAnalyzing, 100); 
+      }
+    }
+  };
+  if (usarWebGPU) {
+    options.device = 'webgpu';
+  }
+  
+  generadores[cacheKey] = await pipeline('text-generation', MODELOS[claveModelo].id, options);
+  return generadores[cacheKey];
+}
 
 async function cargarLib() {
   if (typeof window.transformers !== 'undefined') {
@@ -958,6 +985,33 @@ function cambiarPestana(modo,boton){
   actualizarPlaceholder();
 }
 
+function actualizarEstadoWebGPU() {
+  const chk = $('chkWebGPU');
+  if (!chk) return;
+  
+  const tieneNavegadorWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
+  const claveMod = $('selModelo').value;
+  const modeloInfo = MODELOS[claveMod] || {};
+  const soporteModelo = modeloInfo.webgpu !== false;
+
+  if (!tieneNavegadorWebGPU || !soporteModelo) {
+    chk.checked = false;
+    chk.disabled = true;
+    chk.parentElement.style.opacity = '0.5';
+    chk.parentElement.style.cursor = 'not-allowed';
+    chk.parentElement.title = !tieneNavegadorWebGPU 
+      ? 'Tu navegador actual no soporta WebGPU' 
+      : 'Este modelo ligero se ejecuta por defecto en CPU';
+  } else {
+    chk.disabled = false;
+    chk.parentElement.style.opacity = '1';
+    chk.parentElement.style.cursor = 'pointer';
+    chk.parentElement.title = 'Aceleración gráfica activada';
+  }
+}
+
+$('selModelo').addEventListener('change', actualizarEstadoWebGPU);
+
 $('selNivel').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   nivelActual=b.dataset.nivel;
@@ -1024,13 +1078,33 @@ async function procesarOptimizacion(){
     if(modoActual==='texto'){
       const palabras=input.trim().split(/\s+/).length;
       let nivel=nivelActual;
-      
+      const claveMod = $('selModelo').value;
+      const modeloInfo = MODELOS[claveMod] || MODELOS.multi;
+
       if(palabras < 10){
         mostrarAlerta('advertencia',`<strong>${T.alertShortTitle} (${palabras}):</strong><br>${T.alertShortDesc}`);
       }
-      const r=await comprimirTexto(input,nivel);
-      output=r.texto; eliminados=r.eliminados;
-      if(r.avisoModelo) mostrarAlerta('error',T.alertModelo);
+
+      if (modeloInfo.tipo === 'generativo') {
+        setEstado(T.btnAnalyzing, 50);
+        const generator = await obtenerGenerador(claveMod);
+        const systemInstruction = `Actúa como un compresor de prompts experto. Tu única tarea es recibir un prompt largo y devolverlo extremadamente limpio, directo y conciso. Elimina saludos, cortesías, rodeos, agradecimientos y explicaciones innecesarias. Mantén intactas todas las instrucciones técnicas, formatos de salida, restricciones y requerimientos. Responde ÚNICAMENTE con el prompt optimizado final.`;
+        
+        const promptFormatted = `<|im_start|>system\n${systemInstruction}<|im_end|>\n<|im_start|>user\n${input}<|im_end|>\n<|im_start|>assistant\n`;
+        
+        const resGen = await generator(promptFormatted, { max_new_tokens: 512, temperature: 0.1, do_sample: false });
+
+        let genText = resGen[0].generated_text || '';
+        if (genText.includes('<|im_start|>assistant\n')) {
+          genText = genText.split('<|im_start|>assistant\n').pop();
+        }
+        genText = genText.replace(/<\|im_end\|>/g, '').trim();
+        output = genText || input;
+      } else {
+        const r=await comprimirTexto(input,nivel);
+        output=r.texto; eliminados=r.eliminados;
+        if(r.avisoModelo) mostrarAlerta('error',T.alertModelo);
+      }
     }else if(modoActual==='codigo'){
       const r=comprimirCodigo(input);
       output=r.texto; nota=r.lenguaje;
@@ -1091,6 +1165,7 @@ function copiarTexto(){
 }
 
 actualizarHint();
+actualizarEstadoWebGPU();
 </script>
 </body>
 </html>
