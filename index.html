@@ -591,18 +591,31 @@ const PERFILES={
   agresivo:    {relleno:true,  semantico:true,  umbralDuplicado:0.85, ratioObjetivo:0.55}
 };
 
-async function comprimirTexto(input,nivel){
-  const cfg=PERFILES[nivel];
-  const eliminados=[];
-  const bloques=segmentar(normalizarEspacios(input));
+async function comprimirTexto(input, nivel) {
+  const cfg = PERFILES[nivel];
+  const eliminados = [];
+  const bloques = segmentar(normalizarEspacios(input));
 
-  // Prosa -> oraciones
-  for(const b of bloques){
-    if(b.tipo!=='prosa') continue;
-    b.oraciones=dividirOraciones(b.texto,idiomaActual).map(o=>({texto:o,protegida:esProtegida(o),mantener:true}));
+  // 1. Prosa -> oraciones (fallback agresivo a división por puntos)
+  for (const b of bloques) {
+    if (b.tipo !== 'prosa') continue;
+    
+    let oracionesTexto = dividirOraciones(b.texto, idiomaActual);
+    
+    // Fallback: Si dividirOraciones devolvió 1 sola cadena pero hay puntos con espacio, forzamos split
+    if (oracionesTexto.length <= 1 && b.texto.includes('. ')) {
+      oracionesTexto = b.texto.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean);
+    }
+
+    b.oraciones = oracionesTexto.map(o => ({
+      texto: o,
+      protegida: esProtegida(o),
+      mantener: true,
+      motivo: ''
+    }));
   }
 
-  // Capa 1: relleno / cortesía
+  // 2. Capa 1: Relleno / Cortesía
   if (cfg.relleno) {
     for (const b of bloques) {
       if (b.tipo === 'estructura') {
@@ -613,12 +626,10 @@ async function comprimirTexto(input,nivel){
         for (const o of b.oraciones) {
           const antes = o.texto;
           let limpio = quitarRelleno(o.texto);
-  
-          // Contamos cuántas palabras reales quedan (excluyendo signos)
+
           const palabrasReales = limpio.replace(/[^\p{L}\p{N}\s]/gu, '').trim().split(/\s+/).filter(w => w.length > 2);
-  
-          // Si se quedó sin palabras con sustancia o solo quedaron conectores
-          if (!limpio || palabrasReales.length < 2) {
+
+          if (!limpio || (!o.protegida && palabrasReales.length < 2)) {
             o.mantener = false;
             eliminados.push({ texto: antes, motivo: 'cortesia' });
           } else {
@@ -629,45 +640,72 @@ async function comprimirTexto(input,nivel){
     }
   }
 
-  // Capa 2: análisis semántico sobre oraciones de prosa
-  const unidades=[];
-  if(cfg.semantico){
-    for(const b of bloques){
-      if(b.tipo!=='prosa') continue;
-      for(const o of b.oraciones) if(o.mantener) unidades.push(o);
+  // 3. Capa 2: Detección de Redundancia y Deduplicación
+  const unidades = [];
+  for (const b of bloques) {
+    if (b.tipo !== 'prosa') continue;
+    for (const o of b.oraciones) {
+      if (o.mantener) unidades.push(o);
     }
   }
 
-  let avisoModelo=false;
-  // Cambiar la condición 'unidades.length >= 4' por 'unidades.length >= 2'
-  if (cfg.semantico && unidades.length >= 2) {
+  // Deduplicación SINTÁCTICA RÁPIDA (Jaccard) sin depender del modelo si hay repeticiones
+  for (let i = 0; i < unidades.length; i++) {
+    for (let j = 0; j < i; j++) {
+      if (!unidades[j].mantener) continue;
+      
+      const simSintactica = calcularSimilitudJaccard(unidades[i].texto, unidades[j].texto);
+      
+      // Si la oración es un duplicado idéntico/muy similar (>60% sintáctico)
+      if (simSintactica >= 0.60) {
+        unidades[i].mantener = false;
+        unidades[i].motivo = 'redundante';
+        eliminados.push({ texto: unidades[i].texto, motivo: 'redundante' });
+        break;
+      }
+    }
+  }
+
+  // Capa Vectorial (MMR / Embeddings) sobre oraciones supervivientes
+  let avisoModelo = false;
+  const supervivientes = unidades.filter(u => u.mantener);
+
+  if (cfg.semantico && supervivientes.length >= 2) {
     try {
       const extractor = await obtenerExtractor(document.getElementById('selModelo').value);
-      const vecs = await embeder(unidades.map(u => u.texto), extractor);
-      const idx = new Set(seleccionarOraciones(unidades, vecs, cfg));
-      unidades.forEach((u, i) => {
-        if (!idx.has(i)) {
+      const vecs = await embeder(supervivientes.map(u => u.texto), extractor);
+      const idxElegidos = new Set(seleccionarOraciones(supervivientes, vecs, cfg));
+
+      supervivientes.forEach((u, i) => {
+        if (!idxElegidos.has(i)) {
           u.mantener = false;
           eliminados.push({ texto: u.texto, motivo: u.motivo === 'presupuesto' ? 'presupuesto' : 'redundante' });
         }
       });
-    } catch (e) { console.error('Fallo del modelo:', e); avisoModelo = true; }
-  }
-
-  // Reconstrucción respetando el orden y la estructura original
-  const salida=[];
-  for(const b of bloques){
-    if(b.tipo==='vacio'){ if(salida.length && salida[salida.length-1]!=='') salida.push(''); continue; }
-    if(b.tipo==='literal'){ salida.push(b.texto); continue; }
-    if(b.tipo==='estructura'){ if(b.texto.trim()) salida.push(b.texto); continue; }
-    if(b.tipo==='prosa'){
-      const txt=b.oraciones.filter(o=>o.mantener).map(o=>o.texto).join(' ').trim();
-      if(txt) salida.push(txt);
+    } catch (e) {
+      console.error('Fallo del modelo:', e);
+      avisoModelo = true;
     }
   }
-  let out=salida.join('\n').replace(/\n{3,}/g,'\n\n').trim();
-  if(!out) out=normalizarEspacios(input);
-  return {texto:out,eliminados,avisoModelo};
+
+  // 4. Reconstrucción respetando el orden original
+  const salida = [];
+  for (const b of bloques) {
+    if (b.tipo === 'vacio') {
+      if (salida.length && salida[salida.length - 1] !== '') salida.push('');
+      continue;
+    }
+    if (b.tipo === 'literal') { salida.push(b.texto); continue; }
+    if (b.tipo === 'estructura') { if (b.texto.trim()) salida.push(b.texto); continue; }
+    if (b.tipo === 'prosa') {
+      const txt = b.oraciones.filter(o => o.mantener).map(o => o.texto).join(' ').trim();
+      if (txt) salida.push(txt);
+    }
+  }
+
+  let out = salida.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!out) out = normalizarEspacios(input);
+  return { texto: out, eliminados, avisoModelo };
 }
 
 /* =========================================================================
