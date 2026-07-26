@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Reductor de Tokens IA - RFJ Software</title>
 <meta name="description" content="Comprime tus prompts, código fuente y JSON gratis. Reduce el consumo de tokens de forma segura y 100% local en tu navegador.">
+<script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 :root{
@@ -528,75 +529,59 @@ function seleccionarOraciones(unidades, vectores, opts){
 }
 
 /* =========================================================================
-   3. TRANSFORMERS.JS
+   3. TRANSFORMERS.JS (Carga Global Segura)
    ========================================================================= */
-const CDN='[https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1](https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1)';
-const MODELOS={
-  multi:{id:'Xenova/paraphrase-multilingual-MiniLM-L12-v2'},
-  rapido:{id:'Xenova/all-MiniLM-L6-v2'}
+const MODELOS = {
+  multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
+  rapido: { id: 'Xenova/all-MiniLM-L6-v2' }
 };
-const LOTE=16;
+const LOTE = 16;
 
-let libTransformers=null, extractores={}, tokenizer=undefined;
+let extractores = {}, tokenizer = undefined;
 
-async function cargarLib(){
-  if(!libTransformers){
-    libTransformers=await import(CDN);
-    libTransformers.env.allowLocalModels=false;
-    libTransformers.env.useBrowserCache=true;
+async function cargarLib() {
+  // Usa la librería cargada globalmente desde el <head>
+  if (typeof window.transformers !== 'undefined') {
+    window.transformers.env.allowLocalModels = false;
+    window.transformers.env.useBrowserCache = true;
+    return window.transformers;
   }
-  return libTransformers;
+  // Fallback si la etiqueta del head tarda un instante
+  if (typeof pipeline !== 'undefined') {
+    return { pipeline, AutoTokenizer };
+  }
+  throw new Error("No se pudo acceder a Transformers.js");
 }
 
-async function obtenerExtractor(claveModelo){
-  if(extractores[claveModelo]) return extractores[claveModelo];
-  const {pipeline}=await cargarLib();
-  const T=translations[idiomaActual];
-  extractores[claveModelo]=await pipeline('feature-extraction',MODELOS[claveModelo].id,{
-    progress_callback:d=>{
-      if(d.status==='progress'||d.status==='downloading'){
-        const pct=d.progress?Math.round(d.progress):0;
-        setEstado(`${T.btnDownloading} ${pct}%`,pct);
-      }else if(d.status==='ready'){ setEstado(T.btnAnalyzing,100); }
+async function obtenerExtractor(claveModelo) {
+  if (extractores[claveModelo]) return extractores[claveModelo];
+  const { pipeline } = await cargarLib();
+  const T = translations[idiomaActual];
+  
+  extractores[claveModelo] = await pipeline('feature-extraction', MODELOS[claveModelo].id, {
+    progress_callback: d => {
+      if (d.status === 'progress' || d.status === 'downloading') {
+        const pct = d.progress ? Math.round(d.progress) : 0;
+        setEstado(`${T.btnDownloading} ${pct}%`, pct);
+      } else if (d.status === 'ready') { 
+        setEstado(T.btnAnalyzing, 100); 
+      }
     }
   });
   return extractores[claveModelo];
 }
 
-async function obtenerTokenizer(){
-  if(tokenizer!==undefined) return tokenizer;
-  try{
-    const {AutoTokenizer}=await cargarLib();
-    setEstado(translations[idiomaActual].btnTokenizer,null);
-    tokenizer=await AutoTokenizer.from_pretrained('Xenova/gpt-4');
-  }catch(e){ console.warn('Tokenizador no disponible, usando estimador:',e); tokenizer=null; }
-  return tokenizer;
-}
-
-function contarTokens(t){
-  if(tokenizer){ try{ return tokenizer.encode(t).length; }catch(e){} }
-  return estimarTokens(t);
-}
-
-function estimarTokens(texto){
-  if(!texto) return 0;
-  const ascii=(texto.match(/[\x00-\x7F]/g)||[]).length;
-  const noAscii=texto.length-ascii;
-  const cjk=(texto.match(/[ -鿿가-힯]/g)||[]).length;
-  return Math.ceil(ascii/3.9+(noAscii-cjk)/2.2+cjk);
-}
-
-async function embeder(textos,extractor){
-  const vecs=[];
-  for(let i=0;i<textos.length;i+=LOTE){
-    const lote=textos.slice(i,i+LOTE);
-    const t=await extractor(lote,{pooling:'mean',normalize:true});
-    const dim=t.dims[t.dims.length-1];
-    for(let k=0;k<lote.length;k++) vecs.push(Array.from(t.data.slice(k*dim,(k+1)*dim)));
-    setEstado(`${translations[idiomaActual].btnAnalyzing} (${Math.min(i+LOTE,textos.length)}/${textos.length})`,
-              Math.round(Math.min(i+LOTE,textos.length)/textos.length*100));
+async function obtenerTokenizer() {
+  if (tokenizer !== undefined) return tokenizer;
+  try {
+    const { AutoTokenizer } = await cargarLib();
+    setEstado(translations[idiomaActual].btnTokenizer, null);
+    tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt-4');
+  } catch (e) { 
+    console.warn('Tokenizador no disponible, usando estimador:', e); 
+    tokenizer = null; 
   }
-  return vecs;
+  return tokenizer;
 }
 
 /* =========================================================================
