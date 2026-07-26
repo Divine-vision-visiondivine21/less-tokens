@@ -134,10 +134,10 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <span id="wrapModelo">
     <label for="selModelo" data-i18n="lblModelo">Modelo:</label>
     <select id="selModelo">
-      <option value="multi" selected>Multilingüe (Recomendado) · ~110 MB</option>
+      <option value="multi" selected>Multilingüe (Equilibrado) · ~110 MB</option>
+      <option value="mpnet_multi">MPNet Multilingüe (Alta Precisión ES) · ~430 MB</option>
       <option value="rapido">Rápido (Inglés) · ~23 MB</option>
       <option value="bge_small">BGE Small (Inglés) · ~67 MB</option>
-      <option value="mpnet">MPNet Base (Alta precisión EN) · ~430 MB</option>
     </select>
   </span>
   <span id="wrapWebGPU" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -546,9 +546,9 @@ function seleccionarOraciones(unidades, vectores, opts){
    ========================================================================= */
 const MODELOS = {
   multi: { id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2' },
+  mpnet_multi: { id: 'Xenova/paraphrase-multilingual-mpnet-base-v2' },
   rapido: { id: 'Xenova/all-MiniLM-L6-v2' },
-  bge_small: { id: 'Xenova/bge-small-en-v1.5' },
-  mpnet: { id: 'Xenova/all-mpnet-base-v2' }
+  bge_small: { id: 'Xenova/bge-small-en-v1.5' }
 };
 const LOTE = 16;
 
