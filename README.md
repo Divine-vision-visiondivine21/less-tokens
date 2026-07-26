@@ -78,7 +78,7 @@ If this tool has saved you time or reduced your API costs, consider sponsoring t
 Si esta herramienta te ha ahorrado tiempo o costos en tus APIs, considera patrocinar el desarrollo de futuras funcionalidades para RFJ Software.
 
 <p align="center">
-  <a href="https://github.com/sponsors/TU_USUARIO">
+  <a href="https://github.com/sponsors/jorgehc1">
     <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors">
   </a>
 </p>
