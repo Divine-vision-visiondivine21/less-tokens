@@ -352,21 +352,30 @@ function normalizarEspacios(t){
 
 function quitarRelleno(t){
   let r = t;
+  
+  // 1. Aplicar reglas globales de relleno
   for(const [re,rep] of RELLENO) r = r.replace(re,rep);
   
-  // Limpia conectores y muletillas sobrantes al inicio tras aplicar las regex
-  r = r.replace(/^\s*(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches)[.,;!]*/i, '')
-       .replace(/^\s*(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable[.,;!]*/i, '')
-       .replace(/^\s*(y\s+)?si\s+(no\s+)?es\s+mucha\s+molestia[.,;!]*/i, '')
-       .replace(/^\s*(por\s*favor|please)[.,;!]*/i, '')
-       .replace(/\s{2,}/g, ' ')
+  // 2. Limpieza agresiva de muletillas y conectores sobrantes
+  r = r.replace(/^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[.,;!]*/i, '')
+       .replace(/\b(por\s*favor|please)\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(no\s+)?(es|fuera)\s+(mucha\s+|demasiada\s+)?molestia\b[.,;!]*/gi, '')
+       .replace(/\b(y\s+)?(si\s+)?(ser[íi]as?|seria)\s+(tan\s+)?amable(\s+de)?\b[.,;!]*/gi, '')
+       .replace(/\b(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+respuesta)?\b[.,;!]*/gi, '')
+       .replace(/\bpor\s+tu\s+respuesta\b[.,;!]*/gi, '');
+
+  // 3. LIMPIEZA DE PREFIJOS DE CORTE EN PREGUNTAS (Remueve "Y si...", "Podrías...", etc. justo antes del ¿)
+  r = r.replace(/^[\s,;:.-]*(y\s+)?(si\s+)?(eres|ser[íi]as?)\s+tan\s+amable[,\s]*/i, '')
+       .replace(/^[\s,;:.-]*(podr[íi]as|puedes|ser[íi]as\s+tan\s+amable\s+de)\s+(explicarme|decirme|mostrarme|ayudarme\s+a)\b/i, '¿cómo')
        .replace(/^[\s,;:.-]+/, '')
+       .replace(/\s{2,}/g, ' ')
        .replace(/\s+([,.;:!?])/g, '$1')
        .trim();
 
-  // Preserva el signo de apertura ¿ si existía
-  if (t.includes('¿') && !r.includes('¿')) {
-    r = '¿' + r;
+  // 4. Preserva el signo ¿ si la oración termina en ? o tiene carácter inquisitivo
+  if ((t.includes('¿') || /\?$/.test(t)) && !r.startsWith('¿')) {
+    // Si la oración empezaba con ¿cómo o ¿qué, nos aseguramos que mantenga la apertura
+    r = '¿' + r.replace(/^¿/, '');
   }
 
   if(r && /[a-záéíóúñ]/i.test(r[0])) r = r[0].toUpperCase() + r.slice(1);
