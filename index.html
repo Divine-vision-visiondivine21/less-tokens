@@ -442,37 +442,54 @@ function seleccionarOraciones(unidades, vectores, opts){
 
   const centro = centroide(vectores);
   const relevancia = vectores.map(v => coseno(centro, v));
-
   const vivos = unidades.map((_, i) => i);
-  
+
   if(!ratioObjetivo) return vivos;
 
-  const totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
-  const objetivo = totalChars * ratioObjetivo;
-  const obligatorias = vivos.filter(i => unidades[i].protegida || i === vivos[0]);
+  // En modo Agresivo, solo protegemos estrictamente el Rol (oración 0/rol) y las Negaciones/Prohibiciones explícitas
+  const esCritica = (u) => {
+    const txt = u.texto.toLowerCase();
+    return RE_ROL.test(txt) || /\b(no|never|nunca|jam[áa]s|prohibido|don'?t|do not)\b/i.test(txt);
+  };
+
+  const obligatorias = vivos.filter(i => esCritica(unidades[i]) || i === 0);
   const setObl = new Set(obligatorias);
   const pendientes = vivos.filter(i => !setObl.has(i));
   const elegidos = new Set(obligatorias);
+  
+  let totalChars = vivos.reduce((s, i) => s + unidades[i].texto.length, 0);
+  let objetivo = totalChars * ratioObjetivo;
   let usados = obligatorias.reduce((s, i) => s + unidades[i].texto.length, 0);
 
-  while(pendientes.length && usados < objetivo){
-    let mejor = -1, mejorScore = -Infinity;
+  // Selección MMR sobre oraciones secundarias
+  while(pendientes.length && usados > objetivo){
+    // Seleccionamos la menos relevante para remover
+    let peor = -1, peorScore = Infinity;
     for(const i of pendientes){
       let maxSim = 0;
       for(const j of elegidos) {
         maxSim = Math.max(maxSim, coseno(vectores[i], vectores[j]));
       }
       const score = 0.60 * relevancia[i] - 0.40 * maxSim;
-      if(score > mejorScore){ mejorScore = score; mejor = i; }
+      if(score < peorScore){ peorScore = score; peor = i; }
     }
-    if (mejor === -1) break;
-    elegidos.add(mejor);
-    usados += unidades[mejor].texto.length;
-    pendientes.splice(pendientes.indexOf(mejor), 1);
+    if (peor === -1) break;
+    
+    unidades[peor].motivo = 'presupuesto';
+    pendientes.splice(pendientes.indexOf(peor), 1);
   }
   
-  for(const i of pendientes) unidades[i].motivo = 'presupuesto';
-  return [...elegidos].sort((a, b) => a - b);
+  // Guardamos las oraciones que sobrevivieron al recorte de presupuesto
+  const seleccionadas = new Set([...elegidos, ...pendientes]);
+  
+  unidades.forEach((u, idx) => {
+    if (!seleccionadas.has(idx)) {
+      u.mantener = false;
+      u.motivo = 'presupuesto';
+    }
+  });
+
+  return [...seleccionadas].sort((a, b) => a - b);
 }
 
 /* =========================================================================
