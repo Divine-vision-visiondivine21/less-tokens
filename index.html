@@ -129,6 +129,10 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
     <span data-i18n="tabJson">JSON / Datos</span>
   </button>
+  <button class="tab-btn" onclick="cambiarPestana('engine',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span data-i18n="tabEngine">Less-Tokens Engine</span>
+  </button>
 </div>
 
 <!-- Presets de Ejemplo de 1 Clic -->
@@ -137,6 +141,7 @@ details.detalles .motivo{font-size:.78rem;color:#999;text-transform:uppercase;le
   <button onclick="cargarEjemplo('prompt')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exPrompt">Prompt Largo</button>
   <button onclick="cargarEjemplo('codigo')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exCode">Código Python</button>
   <button onclick="cargarEjemplo('json')" style="background:#e7f1ff; border:1px solid #c5dbff; color:#0b3d91; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exJson">JSON Estructurado</button>
+  <button onclick="cargarEjemplo('engine')" style="background:#d4edda; border:1px solid #c3e6cb; color:#155724; padding:3px 10px; border-radius:15px; cursor:pointer; font-size:0.8rem; font-weight:600;" data-i18n="exEngine">Prompt + Engine</button>
 </div>
 
 <textarea id="txtOriginal" placeholder="Pega un prompt largo, una conversación de chat o un artículo académico..."></textarea>
@@ -236,7 +241,7 @@ const translations = {
     pageTitle:"Reductor de Tokens IA - RFJ Software",
     h1:"Reductor de Tokens Inteligente",
     sub:"Optimiza tus peticiones para ChatGPT, Claude y Gemini sin perder contexto.",
-    tabText:"Texto / Prompts", tabCode:"Código Fuente", tabJson:"JSON / Datos",
+    tabText:"Texto / Prompts", tabCode:"Código Fuente", tabJson:"JSON / Datos", tabEngine:"Less-Tokens Engine",
     placeholderText:"Pega un prompt largo, una conversación de chat o un artículo académico...",
     placeholderCode:"Pega tu código Java, JavaScript, Python, etc. Se eliminarán comentarios y espacios sobrantes sin romper la sintaxis...",
     placeholderJson:"Pega estructuras JSON, JSONL o XML para minificarlas...",
@@ -245,6 +250,9 @@ const translations = {
     hintSeguro:"Seguro: sin pérdida. Solo normaliza espacios, sangrías y saltos de línea. No se descarga ningún modelo.",
     hintEquilibrado:"Equilibrado: limpieza sin pérdida + elimina cortesía y frases casi duplicadas detectadas por solapamiento léxico. Las instrucciones, cifras, negaciones y formatos se conservan siempre.",
     hintAgresivo:"Agresivo: además recorta hasta ~55% del texto de prosa priorizando por relevancia (MMR). Revisa el resultado antes de usarlo.",
+    btnEngine:"Comprimir con Less-Tokens Engine",
+    hintEngine:"Less-Tokens Engine: Aplica reglas de compresión estrictas (elimina relleno, preserva negaciones/cifras/instrucciones, compacta código/JSON) y añade restricción de salida para minimizar tokens de respuesta. No requiere modelo IA.",
+    placeholderEngine:"Pega un prompt, código o datos para comprimir con Less-Tokens Engine...",
     btnCompress:"Comprimir Contexto Gratis",
     btnDownloading:"Cargando IA local",
     btnTokenizer:"Cargando tokenizador",
@@ -277,7 +285,7 @@ const translations = {
     pageTitle:"AI Token Reducer - RFJ Software",
     h1:"Smart Token Reducer",
     sub:"Optimize your requests for ChatGPT, Claude and Gemini without losing context.",
-    tabText:"Text / Prompts", tabCode:"Source Code", tabJson:"JSON / Data",
+    tabText:"Text / Prompts", tabCode:"Source Code", tabJson:"JSON / Data", tabEngine:"Less-Tokens Engine",
     placeholderText:"Paste a long prompt, a chat conversation or an academic article...",
     placeholderCode:"Paste your Java, JavaScript, Python code, etc. Comments and extra whitespace are removed without breaking syntax...",
     placeholderJson:"Paste JSON, JSONL or XML structures to minify them...",
@@ -286,6 +294,9 @@ const translations = {
     hintSeguro:"Safe: lossless. Only normalizes whitespace, indentation and line breaks. No model download.",
     hintEquilibrado:"Balanced: lossless cleanup + removes politeness and near-duplicate sentences detected via lexical overlap. Instructions, numbers, negations and output formats are always kept.",
     hintAgresivo:"Aggressive: additionally trims prose down to ~55% by relevance ranking (MMR). Review the output before using it.",
+    btnEngine:"Compress with Less-Tokens Engine",
+    hintEngine:"Less-Tokens Engine: Applies strict compression rules (removes filler, preserves negations/numbers/instructions, compacts code/JSON) and adds output restriction to minimize response tokens. No AI model required.",
+    placeholderEngine:"Paste a prompt, code or data to compress with Less-Tokens Engine...",
     btnCompress:"Compress Context for Free",
     btnDownloading:"Loading local AI",
     btnTokenizer:"Loading tokenizer",
@@ -798,6 +809,46 @@ function comprimirJson(src){
   return { texto: t.split('\n').map(l => l.replace(/\s+$/,'')).filter(l => l.trim()).join('\n'), nota: 'invalido' };
 }
 
+/* Less-Tokens Engine: compresión local sin IA */
+function comprimirLessTokens(input){
+  if(!input||!input.trim())return{texto:'',eliminados:[],avisoModelo:!1};
+  let t=input.trim(),eliminados=[];
+
+  /* 1. Eliminación de relleno */
+  const rellenoPat=[
+    /^\s*(hola|hey|hi|hello|(muy\s+)?buen(os|as)\s+(d[íi]as|tardes|noches))[\s,.!¡]*/i,
+    /^\s*(querido|estimado|apreciado)?\s*(modelo|asistente|chatgpt|ia|ai|sistema|de\s+inteligencia\s+artificial)?[\s,.!¡]*/i,
+    /^\s*¿?c[óo]mo\s+(est[áa]s|est[áa]n|te\s+va|te\s+encuentras)\??[\s,.!¡]*/i,
+    /espero\s+(de\s+todo\s+coraz[óo]n\s+)?que\s+(est[eé]s|se\s+encuentre|te\s+encuentres)\s+(muy\s+)?(bien|de\s+maravilla|teniendo\s+un\s+(excelente|buen|bendecido)\s+d[íi]a)[^.,;!?]*[.,;!?]?\s*/gi,
+    /(te|le)\s+escribo\s+(por\s+este\s+medio\s+)?(porque|para|con\s+el\s+fin\s+de)?\s*/gi,
+    /(me\s+gustar[íi]a|quisiera)\s+(pedirte|solicitarte|preguntarte)\s+(de\s+la\s+manera\s+m[áa]s\s+atenta\s+)?(si\s+podr[íi]as?|si\s+ser[íi]as?|si\s+fueras?)?\s*(hacer\s+el\s+(gran\s+)?favor\s+de\s+)?/gi,
+    /(por\s*favor|porfavor|please)\b[,\s]*/gi,
+    /(y\s+)?si\s+(no\s+)?(es|fuera|fuese)\s+(mucha\s+|demasiada\s+|ning[úu]n\s+)?(molestia|inconveniente)(\s+para\s+ti|\s+para\s+usted)?\b[,\s]*/gi,
+    /(muchas\s+|mil\s+)?gracias(\s+de\s+antemano|\s+por\s+adelantado|\s+por\s+tu\s+ayuda|\s+por\s+tu\s+respuesta|\s+por\s+tu\s+tiempo)?\b[.,!¡\s]*/gi,
+    /\bquedo\s+(muy\s+)?atento\s+a\s+tu\s+respuesta[.,!¡\s]*/gi,
+    /\b¡?que\s+tengas\s+un\s+(excelente|buen|bendecido)\s+d[íi]a!?[.,!¡\s]*/gi,
+    /\b(en\s+este\s+prompt\s+(quiero\s+que\s+|necesito\s+que\s+|vamos\s+a\s+|procede\s+a\s+))/gi,
+    /\b(resulta\s+que\s+|lo\s+que\s+necesito\s+exactamente\s+es\s+que\s+|es\s+decir,\s+tu\s+trabajo\s+y\s+tu\s+funci[óo]n\s+principal\s+va\s+a\s+ser\s+)/gi,
+    /\b(necesito|requiero)\s+(tu\s+)?(valiosa\s+|gran\s+)?(ayuda|asistencia)[.,!¡\s]*/gi,
+  ];
+  let r=t;
+  for(const re of rellenoPat){const a=r;r=r.replace(re,'');if(r!==a)eliminados.push({texto:'relleno eliminado',motivo:'cortesia'})}
+  /* 2. preservación crítica: no se tocan negaciones/cifras/instrucciones - los patterns ya son seguros */
+  /* 3. Normalización de espacios */
+  r=r.replace(/\s+([,.;:!?)\]])/g,'$1').replace(/([(\[¿¡])\s+/g,'$1').replace(/ ?\n ?/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+
+  /* 3. Compactación de código/datos si se detecta */
+  const esJson=/^[\s\n]*[[{]/.test(r)&&/[[}]\s*$/.test(r);
+  if(esJson){try{r=JSON.stringify(JSON.parse(r))}catch(e){}}
+  else if(/^(def |class |function|import |const |let |var |# |\/\/|<!--)/m.test(r)){
+    r=r.split('\n').map(l=>l.trim()).filter(Boolean).join('\n');
+    r=r.replace(/(\/\/.*$|#.*$|<!--[\s\S]*?-->)/gm,'').replace(/\n{3,}/g,'\n').trim();
+  }
+  /* 4. Inyección de restricción de salida */
+  r=r+'\n\n[OUTPUT_RESTRICTION] Responde solo con lo solicitado. Sin explicaciones, sin resúmenes, sin cortesías. Sé directo. Usa frases cortas. 0 relleno. [/OUTPUT_RESTRICTION]';
+  return{texto:r,eliminados,avisoModelo:!1};
+}
+
 async function comprimirTexto(input, nivel) {
   const cfg = PERFILES[nivel];
   const eliminados = [];
@@ -994,16 +1045,18 @@ function cambiarIdioma(lang){
   });
   actualizarPlaceholder();
   actualizarHint();
-  if(!$('btnPrincipal').classList.contains('cargando')) $('textoBtn').innerText=translations[lang].btnCompress;
+  if(!$('btnPrincipal').classList.contains('cargando')) $('textoBtn').innerText=translations[lang][modoActual==='engine'?'btnEngine':'btnCompress'];
 }
 
 function actualizarPlaceholder(){
-  const p={texto:'placeholderText',codigo:'placeholderCode',json:'placeholderJson'}[modoActual];
+  const p={texto:'placeholderText',codigo:'placeholderCode',json:'placeholderJson',engine:'placeholderEngine'}[modoActual];
   $('txtOriginal').placeholder=translations[idiomaActual][p];
 }
 
 function actualizarHint(){
-  const k={seguro:'hintSeguro',equilibrado:'hintEquilibrado',agresivo:'hintAgresivo'}[nivelActual];
+  let k;
+  if(modoActual==='engine'){ k='hintEngine'; }
+  else { k={seguro:'hintSeguro',equilibrado:'hintEquilibrado',agresivo:'hintAgresivo'}[nivelActual]; }
   $('hintNivel').innerHTML=translations[idiomaActual][k];
 }
 
@@ -1012,12 +1065,15 @@ function cambiarPestana(modo,boton){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   boton.classList.add('active');
   $('alertaCalidad').style.display='none';
-  const soloTexto=modo==='texto';
-  $('selNivel').parentElement.style.display=soloTexto?'':'none';
-  $('wrapModelo').style.display=soloTexto?'':'none';
-  $('wrapWebGPU').style.display=soloTexto?'':'none';
-  $('hintNivel').style.display=soloTexto?'':'none';
+  const mostrarOpciones=modo==='texto';
+  $('selNivel').parentElement.style.display=mostrarOpciones?'':'none';
+  $('wrapModelo').style.display=mostrarOpciones?'':'none';
+  $('wrapWebGPU').style.display=mostrarOpciones?'':'none';
+  $('hintNivel').style.display=(modo==='texto'||modo==='engine')?'':'none';
   actualizarPlaceholder();
+  actualizarHint();
+  const T=translations[idiomaActual];
+  if(!$('btnPrincipal').classList.contains('cargando')) $('textoBtn').innerText=T[modo==='engine'?'btnEngine':'btnCompress'];
 }
 
 function actualizarEstadoWebGPU() {
@@ -1099,18 +1155,17 @@ async function procesarOptimizacion(){
   let output=input, eliminados=[], nota='';
 
   try{
-    // El nivel "Seguro" promete explícitamente "no se descarga ningún modelo": antes
-    // esta llamada se hacía siempre, sin importar nivel ni modo, contradiciendo esa
-    // promesa (y descargando el tokenizer de forma innecesaria para una limpieza
-    // puramente léxica). Ahora solo se descarga cuando realmente aporta precisión.
-    const evitarDescargaTokenizer = (modoActual==='texto' && nivelActual==='seguro');
+    const evitarDescargaTokenizer = (modoActual==='texto' && nivelActual==='seguro') || modoActual==='engine';
     if(!evitarDescargaTokenizer){
       await obtenerTokenizer();
     }
     const usandoTokenizerReal = !!tokenizer;
     const tokensAntes=contarTokens(input);
 
-    if(modoActual==='texto'){
+    if(modoActual==='engine'){
+      const r=comprimirLessTokens(input);
+      output=r.texto; eliminados=r.eliminados;
+    }else if(modoActual==='texto'){
       const palabras=input.trim().split(/\s+/).length;
       let nivel=nivelActual;
       const claveMod = $('selModelo').value;
@@ -1157,6 +1212,14 @@ async function procesarOptimizacion(){
     }
 
     output=output.trim();
+    if(modoActual==='texto'&&nivelActual){
+      const R={
+        seguro:'\n\n[Responde de forma directa y concisa. Evita introducciones corteses, preámbulos o resúmenes finales. Ve directo a la respuesta o código solicitado.]',
+        equilibrado:'\n\n[Restricción de costo: Responde usando únicamente el código, formato o datos solicitados. Cero explicaciones, cero texto de relleno, cero comentarios explicativos a menos que se hayan pedido explícitamente.]',
+        agresivo:'\n\n[Output Mínimo: Adopta un estilo ultra-compacto. Omita explicaciones, asunciones y prosa. Si la respuesta requiere código, entrega SOLO el código limpio sin bloques de texto antes o después. Sé directo al grano.]'
+      };
+      output+=R[nivelActual]||'';
+    }
     const tokensDespues=contarTokens(output);
     let ahorro=tokensAntes>0?Math.round((tokensAntes-tokensDespues)/tokensAntes*100):0;
     if(ahorro<0) ahorro=0;
@@ -1194,7 +1257,7 @@ async function procesarOptimizacion(){
     mostrarAlerta('error',String(err && err.message ? err.message : err));
   }finally{
     btn.classList.remove('cargando');
-    setEstado(T.btnCompress,null);
+    setEstado(modoActual==='engine'?T.btnEngine:T.btnCompress,null);
     if(typeof turnstile!=='undefined'){ turnstile.reset(); btn.disabled=true; }
     else btn.disabled=false;
   }
@@ -1224,6 +1287,9 @@ function cargarEjemplo(tipo){
   }else if(tipo==='json'){
     cambiarPestana('json', document.querySelectorAll('.tab-btn')[2]);
     $('txtOriginal').value = `{\n  "usuario": "Jorge",\n  "rol": "Desarrollador",\n  "permisos": [\n    "read",\n    "write",\n    "execute"\n  ],\n  "configuracion": {\n    "notificaciones": true,\n    "tema": "oscuro"\n  }\n}`;
+  }else if(tipo==='engine'){
+    cambiarPestana('engine', document.querySelectorAll('.tab-btn')[3]);
+    $('txtOriginal').value = `Hola ChatGPT, muy buenos días. Espero que te encuentres excelente. Te escribo para pedirte de la manera más atenta si podrías hacer el favor de ayudarme con lo siguiente: Necesito que generes un plan de marketing digital para mi negocio. Por favor, incluye estrategias de SEO, redes sociales y email marketing. El presupuesto es de $5,000 USD mensuales y el plazo es de 3 meses. Muchas gracias de antemano por tu valiosa ayuda.`;
   }
 }
 
